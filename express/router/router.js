@@ -17,4 +17,19 @@ router.get('/api/subscription', async (req, res) => {
     });
 });
 
+// add a client
+router.post('/api/subscription', async (req, res) => {
+    const {hardwareID, name, phoneNum} = req.body;
+    const client = await clientModel.findOne({where: {hardwareID}});
+    if (client === null) {
+        await clientModel.create({hardwareID, name, phoneNum, clients: 0});
+    } else {
+        await client.update({clients});
+    }
+
+    res.json({
+        created: 'ok',
+    });
+});
+
 module.exports = router;
