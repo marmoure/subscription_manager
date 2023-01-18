@@ -23,13 +23,11 @@ router.post('/api/subscription', async (req, res) => {
     const client = await clientModel.findOne({where: {hardwareID}});
     if (client === null) {
         await clientModel.create({hardwareID, name, phoneNum, clients: 0});
-    } else {
-        await client.update({clients});
+         return res.json({
+            created: 'ok',
+        });
     }
-
-    res.json({
-        created: 'ok',
-    });
+    res.sendStatus(404);
 });
 
 // delete a client
@@ -38,11 +36,11 @@ router.delete('/api/subscription', async (req, res) => {
     const client = await clientModel.findOne({where: {hardwareID}});
     if (client !== null) {
         await client.destroy();
+        return res.json({
+            deleted: 'ok',
+        });
     }
-
-    res.json({
-        deleted: 'ok',
-    });
+    res.sendStatus(404);
 });
 
 module.exports = router;
