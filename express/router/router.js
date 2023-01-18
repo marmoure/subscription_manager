@@ -1,10 +1,11 @@
 const {Router} = require('express');
+const path = require('path');
 const clientModel = require('../../sequelize/models/client.model');
 
 const router = Router();
 
 router.get('/', (req, res) => {
-    res.send('Hello World');
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 router.get('/api/subscription', async (req, res) => {
