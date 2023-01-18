@@ -32,4 +32,17 @@ router.post('/api/subscription', async (req, res) => {
     });
 });
 
+// delete a client
+router.delete('/api/subscription', async (req, res) => {
+    const {hardwareID} = req.body;
+    const client = await clientModel.findOne({where: {hardwareID}});
+    if (client !== null) {
+        await client.destroy();
+    }
+
+    res.json({
+        deleted: 'ok',
+    });
+});
+
 module.exports = router;
