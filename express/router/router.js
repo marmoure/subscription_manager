@@ -43,4 +43,19 @@ router.delete('/api/subscription', async (req, res) => {
     res.sendStatus(404);
 });
 
+//update a client
+router.put('/api/subscription', async (req, res) => {
+    const {hardwareID, name, phoneNum , clients} = req.body;
+    const client = await clientModel.findOne({where: {hardwareID}});
+    if (client !== null) {
+        const newClients = client.clients + clients;
+        await client.update({name, phoneNum, newClients});
+        return res.json({
+            updated: 'ok',
+        });
+    }
+    res.sendStatus(404);
+});
+
+
 module.exports = router;
