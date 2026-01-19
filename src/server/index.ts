@@ -4,12 +4,14 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { exampleRouter } from './routes/example'
 import subscriptionRouter from './routes/subscription'
+import { adminRouter } from './routes/admin'
 import {
   RegistrationSchema,
   MachineQuerySchema,
   LicenseKeyResponseSchema,
   AdminUserListSchema
 } from './validators'
+import { openAPISpecs } from './openapi'
 
 const app = new OpenAPIHono()
 
@@ -17,8 +19,8 @@ app.use('*', cors())
 app.use('*', logger())
 
 app.route('/', exampleRouter)
+app.route('/', adminRouter)
 app.route('/api', subscriptionRouter)
-
 app.doc('/openapi.json', {
   openapi: '3.0.0',
   info: {

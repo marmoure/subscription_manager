@@ -22,4 +22,3 @@ export const licenses = sqliteTable('licenses', {
 }, (table) => ({
   machineIdIdx: index('machine_id_idx').on(table.machineId),
 }))
-
