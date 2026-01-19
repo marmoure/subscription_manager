@@ -1,16 +1,11 @@
-import { useState } from 'react'
+import { RegistrationForm } from './RegistrationForm';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Subscription Manager</h1>
-      <div>
-        <button onClick={() => setCount((c) => c + 1)}>count is {count}</button>
-      </div>
+    <div>
+      <RegistrationForm />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
