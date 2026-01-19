@@ -11,9 +11,9 @@
     "build:client": "vite build",
     "build:server": "tsc --project tsconfig.server.json",
     "preview": "vite preview",
-    "db:generate": "drizzle-kit generate:sqlite",
+    "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push:sqlite",
+    "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "openapi": "openapi-typescript src/server/openapi.ts -o src/client/api/schema.ts"
   },
