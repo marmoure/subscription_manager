@@ -1,0 +1,4 @@
+onlyBuiltDependencies:
+  - '@openapitools/openapi-generator-cli'
+  - better-sqlite3
+  - esbuild
