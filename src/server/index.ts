@@ -6,6 +6,7 @@ import { exampleRouter } from './routes/example'
 import subscriptionRouter from './routes/subscription'
 import { adminRouter } from './routes/admin'
 import { licenseRouter } from './routes/license'
+import { registerRouter } from './routes/register'
 import { openAPISpecs } from './openapi'
 import {
   RegistrationSchema,
@@ -22,6 +23,7 @@ app.use('*', logger())
 app.route('/', exampleRouter)
 app.route('/', adminRouter)
 app.route('/', licenseRouter)
+app.route('/', registerRouter)
 app.route('/api', subscriptionRouter)
 app.doc('/openapi.json', {
   openapi: '3.0.0',
