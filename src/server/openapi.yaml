@@ -1,0 +1,158 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Subscription Manager API
+components:
+  schemas:
+    Registration:
+      type: object
+      required:
+        - name
+        - phoneNumber
+        - shopName
+        - address
+        - numberOfCashiers
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Name is required
+        phoneNumber:
+          type: string
+          minLength: 1
+          pattern: '^[+]?[\d\s\-\(\)]+$'
+          description: Phone number is required
+        shopName:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Shop name is required
+        address:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Address is required
+        numberOfCashiers:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Number of cashiers must be at least 1
+      example:
+        name: John Doe
+        phoneNumber: '+1234567890'
+        shopName: My Shop
+        address: 123 Main St, City, State
+        numberOfCashiers: 2
+    
+    MachineQuery:
+      type: object
+      required:
+        - machineId
+      properties:
+        machineId:
+          type: string
+          minLength: 1
+          description: Machine ID is required
+      example:
+        machineId: machine-123
+    
+    LicenseKeyResponse:
+      type: object
+      properties:
+        licenseKey:
+          type: string
+          nullable: true
+        machineId:
+          type: string
+        issueDate:
+          type: string
+          format: date-time
+        userName:
+          type: string
+          nullable: true
+        shopName:
+          type: string
+          nullable: true
+      example:
+        licenseKey: LICENSE-123-ABC
+        machineId: machine-123
+        issueDate: '2024-01-15T00:00:00.000Z'
+        userName: John Doe
+        shopName: My Shop
+    
+    AdminUserList:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              userName:
+                type: string
+                nullable: true
+              phoneNumber:
+                type: string
+                nullable: true
+              shopName:
+                type: string
+                nullable: true
+              address:
+                type: string
+                nullable: true
+              numberOfCashiers:
+                type: integer
+                nullable: true
+              machineId:
+                type: string
+              licenseKey:
+                type: string
+                nullable: true
+              issueDate:
+                type: string
+                format: date-time
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      example:
+        users:
+          - id: 1
+            userName: John Doe
+            phoneNumber: '+1234567890'
+            shopName: My Shop
+            address: 123 Main St, City, State
+            numberOfCashiers: 2
+            machineId: machine-123
+            licenseKey: LICENSE-123-ABC
+            issueDate: '2024-01-15T00:00:00.000Z'
+        total: 1
+        page: 1
+        limit: 10
+paths:
+  /items/{id}:
+    get:
+      operationId: getItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Get item by id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
