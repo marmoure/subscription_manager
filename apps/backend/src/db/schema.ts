@@ -49,6 +49,16 @@ export const userSubmissionsRelations = relations(userSubmissions, ({ one }) => 
   }),
 }));
 
+export const adminUsers = sqliteTable('admin_users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  username: text('username').unique().notNull(),
+  hashedPassword: text('hashed_password').notNull(),
+  email: text('email').unique().notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
+  lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+});
+
 export type User = InferSelectModel<typeof users>;
 export type NewUser = InferInsertModel<typeof users>;
 
@@ -57,3 +67,6 @@ export type NewLicenseKey = InferInsertModel<typeof licenseKeys>;
 
 export type UserSubmission = InferSelectModel<typeof userSubmissions>;
 export type NewUserSubmission = InferInsertModel<typeof userSubmissions>;
+
+export type AdminUser = InferSelectModel<typeof adminUsers>;
+export type NewAdminUser = InferInsertModel<typeof adminUsers>;
