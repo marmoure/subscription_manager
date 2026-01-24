@@ -2,6 +2,7 @@
   "name": "@vibe/frontend",
   "version": "1.0.0",
   "description": "Frontend application for vibe subscription manager",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vite",

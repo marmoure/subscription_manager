@@ -21,7 +21,7 @@ const envSchema = z.object({
   // Server Configuration
   PORT: z
     .string()
-    .default('3000')
+    .default('3001')
     .transform((val) => parseInt(val, 10))
     .pipe(z.number().int().positive().max(65535, 'PORT must be between 1 and 65535')),
 
@@ -33,7 +33,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z
     .string()
     .url('CORS_ORIGIN must be a valid URL')
-    .default('http://localhost:5173'),
+    .default('http://localhost:3000'),
 
   // SMTP Configuration (for sending emails)
   SMTP_HOST: z.string().min(1, 'SMTP_HOST is required'),
