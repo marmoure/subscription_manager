@@ -3,6 +3,6 @@ import ReactDOM from 'react-dom/client'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <div>Hello Vibe</div>
+    <div>Hello wwwwwwwwwww Vibe</div>
   </React.StrictMode>,
 )
