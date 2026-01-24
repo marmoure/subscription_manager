@@ -5,8 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1769291046588,
-      "tag": "0000_careless_oracle",
+      "when": 1769297594364,
+      "tag": "0000_20260125000000_initial_schema",
       "breakpoints": true
     }
   ]
