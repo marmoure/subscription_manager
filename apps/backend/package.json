@@ -27,7 +27,8 @@
     "dotenv": "^16.3.1",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.6.19",
-    "mongoose": "^7.5.0"
+    "mongoose": "^7.5.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
