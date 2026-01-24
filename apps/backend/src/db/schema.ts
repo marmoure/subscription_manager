@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
-import { sql, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
+import { sql, type InferSelectModel, type InferInsertModel, relations } from 'drizzle-orm';
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -21,8 +21,39 @@ export const licenseKeys = sqliteTable('license_keys', {
   machineIdIdx: index('machine_id_idx').on(table.machineId),
 }));
 
+export const userSubmissions = sqliteTable('user_submissions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  machineId: text('machine_id').notNull(),
+  phone: text('phone').notNull(),
+  shopName: text('shop_name').notNull(),
+  email: text('email').notNull(),
+  numberOfCashiers: integer('number_of_cashiers').notNull(),
+  submissionDate: integer('submission_date', { mode: 'timestamp' }).notNull().default(new Date()),
+  ipAddress: text('ip_address'),
+  licenseKeyId: integer('license_key_id').references(() => licenseKeys.id),
+}, (table) => ({
+  emailIdx: index('submission_email_idx').on(table.email),
+  machineIdIdx: index('submission_machine_id_idx').on(table.machineId),
+  submissionDateIdx: index('submission_date_idx').on(table.submissionDate),
+}));
+
+export const licenseKeysRelations = relations(licenseKeys, ({ one }) => ({
+  submission: one(userSubmissions),
+}));
+
+export const userSubmissionsRelations = relations(userSubmissions, ({ one }) => ({
+  licenseKey: one(licenseKeys, {
+    fields: [userSubmissions.licenseKeyId],
+    references: [licenseKeys.id],
+  }),
+}));
+
 export type User = InferSelectModel<typeof users>;
 export type NewUser = InferInsertModel<typeof users>;
 
 export type LicenseKey = InferSelectModel<typeof licenseKeys>;
 export type NewLicenseKey = InferInsertModel<typeof licenseKeys>;
+
+export type UserSubmission = InferSelectModel<typeof userSubmissions>;
+export type NewUserSubmission = InferInsertModel<typeof userSubmissions>;
