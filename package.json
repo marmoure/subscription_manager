@@ -1,0 +1,29 @@
+{
+  "name": "@vibe/monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo for vibe subscription manager",
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "build": "pnpm --filter \"./apps/*\" build",
+    "test": "pnpm --filter \"./apps/*\" test",
+    "lint": "pnpm --filter \"./apps/*\" lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "pnpm": {
+    "patchedDependencies": {},
+    "hoist": [
+      "**"
+    ],
+    "public-hoist-pattern": [
+      "**"
+    ]
+  }
+}
