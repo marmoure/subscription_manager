@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "7829d5b1-c44a-4705-899c-39a430816d01",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "42633507-951c-4400-9982-f1d14f9e7eab",
+  "prevId": "7829d5b1-c44a-4705-899c-39a430816d01",
   "tables": {
     "admin_users": {
       "name": "admin_users",
@@ -41,7 +41,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-24T23:34:20.563Z\"'"
         },
         "last_login_at": {
           "name": "last_login_at",
@@ -110,7 +110,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-24T23:34:20.562Z\"'"
         },
         "last_used_at": {
           "name": "last_used_at",
@@ -195,7 +195,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-24T23:34:20.562Z\"'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -203,7 +203,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-24T23:34:20.562Z\"'"
         },
         "expires_at": {
           "name": "expires_at",
@@ -299,7 +299,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-24T23:34:20.562Z\"'"
         },
         "ip_address": {
           "name": "ip_address",
@@ -388,7 +388,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.355Z\"'"
+          "default": "'\"2026-01-24T23:34:20.561Z\"'"
         }
       },
       "indexes": {
