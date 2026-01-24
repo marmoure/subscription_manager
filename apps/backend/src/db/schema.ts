@@ -38,6 +38,18 @@ export const userSubmissions = sqliteTable('user_submissions', {
   submissionDateIdx: index('submission_date_idx').on(table.submissionDate),
 }));
 
+export const apiKeys = sqliteTable('api_keys', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  key: text('key').unique().notNull(),
+  name: text('name'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
+  lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  usageCount: integer('usage_count').notNull().default(0),
+}, (table) => ({
+  keyIdx: index('key_idx').on(table.key),
+}));
+
 export const licenseKeysRelations = relations(licenseKeys, ({ one }) => ({
   submission: one(userSubmissions),
 }));
@@ -70,3 +82,6 @@ export type NewUserSubmission = InferInsertModel<typeof userSubmissions>;
 
 export type AdminUser = InferSelectModel<typeof adminUsers>;
 export type NewAdminUser = InferInsertModel<typeof adminUsers>;
+
+export type ApiKey = InferSelectModel<typeof apiKeys>;
+export type NewApiKey = InferInsertModel<typeof apiKeys>;
