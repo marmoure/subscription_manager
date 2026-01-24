@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Monorepo for vibe subscription manager",
   "scripts": {
+    "setup:env": "node setup-env.js",
     "dev": "pnpm --parallel --filter \"./apps/*\" dev",
     "build": "pnpm --filter \"./apps/*\" build",
     "test": "pnpm --filter \"./apps/*\" test",
