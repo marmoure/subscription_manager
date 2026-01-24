@@ -5,7 +5,7 @@
   "description": "Monorepo for vibe subscription manager",
   "scripts": {
     "setup:env": "node setup-env.js",
-    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev": "concurrently \"pnpm --filter @vibe/backend dev\" \"pnpm --filter @vibe/frontend dev\"",
     "build": "pnpm --filter \"./apps/*\" build",
     "test": "pnpm --filter \"./apps/*\" test",
     "lint": "pnpm --filter \"./apps/*\" lint"
@@ -26,5 +26,8 @@
     "public-hoist-pattern": [
       "**"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
