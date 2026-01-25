@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { authenticateAdmin } from '../../middleware/authenticateAdmin';
 import { zValidator } from '../../middleware/validator';
-import { listLicensesQuerySchema, type ListLicensesQueryInput } from '../../schemas/license.schema';
+import { listLicensesQuerySchema, getLicenseByIdSchema, type ListLicensesQueryInput, type GetLicenseByIdInput } from '../../schemas/license.schema';
 import { LicenseService } from '../../services/license.service';
 
 const adminLicenseRoutes = new Hono()
@@ -33,6 +33,41 @@ const adminLicenseRoutes = new Hono()
         return c.json({
           success: false,
           message: 'Internal server error while fetching licenses'
+        }, 500);
+      }
+    }
+  )
+  /**
+   * GET /api/admin/licenses/:id
+   * Fetches complete details for a single license.
+   * Requires admin authentication.
+   */
+  .get(
+    '/licenses/:id',
+    authenticateAdmin,
+    zValidator('param', getLicenseByIdSchema),
+    async (c) => {
+      const { id } = (c as any).get('validated') as GetLicenseByIdInput;
+      
+      try {
+        const license = await LicenseService.getLicenseById(id);
+        
+        if (!license) {
+          return c.json({
+            success: false,
+            message: 'License not found'
+          }, 404);
+        }
+        
+        return c.json({
+          success: true,
+          data: license
+        }, 200);
+      } catch (error) {
+        console.error(`Error in fetch license by ID route: ${error}`);
+        return c.json({
+          success: false,
+          message: 'Internal server error while fetching license details'
         }, 500);
       }
     }

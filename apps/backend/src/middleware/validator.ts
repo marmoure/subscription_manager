@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context, Next } from 'hono';
 
-type ValidationTarget = 'json' | 'query';
+type ValidationTarget = 'json' | 'query' | 'param';
 
 /**
  * Simple Zod validator middleware for Hono
@@ -15,6 +15,8 @@ export const zValidator = (target: ValidationTarget, schema: z.ZodSchema) => asy
       data = await c.req.json();
     } else if (target === 'query') {
       data = c.req.query();
+    } else if (target === 'param') {
+      data = c.req.param();
     }
 
     const result = schema.safeParse(data);

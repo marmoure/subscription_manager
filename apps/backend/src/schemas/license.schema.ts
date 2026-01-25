@@ -21,3 +21,9 @@ export const listLicensesQuerySchema = z.object({
 });
 
 export type ListLicensesQueryInput = z.infer<typeof listLicensesQuerySchema>;
+
+export const getLicenseByIdSchema = z.object({
+  id: z.string().regex(/^\d+$/, 'ID must be a valid integer').transform((val) => parseInt(val, 10)),
+});
+
+export type GetLicenseByIdInput = z.infer<typeof getLicenseByIdSchema>;

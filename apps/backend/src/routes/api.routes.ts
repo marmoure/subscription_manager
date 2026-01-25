@@ -14,9 +14,10 @@ const apiRoutes = new Hono()
     zValidator('json', verifyLicenseSchema),
     async (c) => {
       const { machineId } = (c as any).get('validated') as VerifyLicenseInput;
+      const ipAddress = c.req.header('x-forwarded-for') || c.req.header('remote-addr');
       
       try {
-        const result = await LicenseService.verifyLicense(machineId);
+        const result = await LicenseService.verifyLicense(machineId, ipAddress);
         
         if (!result.valid) {
           return c.json(result, 404);

@@ -53,17 +53,6 @@ export const apiKeys = sqliteTable('api_keys', {
   keyIdx: index('key_idx').on(table.key),
 }));
 
-export const licenseKeysRelations = relations(licenseKeys, ({ one }) => ({
-  submission: one(userSubmissions),
-}));
-
-export const userSubmissionsRelations = relations(userSubmissions, ({ one }) => ({
-  licenseKey: one(licenseKeys, {
-    fields: [userSubmissions.licenseKeyId],
-    references: [licenseKeys.id],
-  }),
-}));
-
 export const adminUsers = sqliteTable('admin_users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   username: text('username').unique().notNull(),
@@ -73,6 +62,39 @@ export const adminUsers = sqliteTable('admin_users', {
   lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 });
+
+export const verificationLogs = sqliteTable('verification_logs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  licenseKeyId: integer('license_key_id').notNull().references(() => licenseKeys.id),
+  machineId: text('machine_id').notNull(),
+  status: text('status', { enum: ['success', 'failed'] }).notNull(),
+  message: text('message'),
+  ipAddress: text('ip_address'),
+  timestamp: integer('timestamp', { mode: 'timestamp' }).notNull().default(new Date()),
+}, (table) => ({
+  licenseKeyIdIdx: index('verification_logs_license_key_id_idx').on(table.licenseKeyId),
+  machineIdIdx: index('verification_logs_machine_id_idx').on(table.machineId),
+  timestampIdx: index('verification_logs_timestamp_idx').on(table.timestamp),
+}));
+
+export const licenseKeysRelations = relations(licenseKeys, ({ one, many }) => ({
+  submission: one(userSubmissions),
+  verificationLogs: many(verificationLogs),
+}));
+
+export const verificationLogsRelations = relations(verificationLogs, ({ one }) => ({
+  licenseKey: one(licenseKeys, {
+    fields: [verificationLogs.licenseKeyId],
+    references: [licenseKeys.id],
+  }),
+}));
+
+export const userSubmissionsRelations = relations(userSubmissions, ({ one }) => ({
+  licenseKey: one(licenseKeys, {
+    fields: [userSubmissions.licenseKeyId],
+    references: [licenseKeys.id],
+  }),
+}));
 
 export type User = InferSelectModel<typeof users>;
 export type NewUser = InferInsertModel<typeof users>;
@@ -88,3 +110,6 @@ export type NewAdminUser = InferInsertModel<typeof adminUsers>;
 
 export type ApiKey = InferSelectModel<typeof apiKeys>;
 export type NewApiKey = InferInsertModel<typeof apiKeys>;
+
+export type VerificationLog = InferSelectModel<typeof verificationLogs>;
+export type NewVerificationLog = InferInsertModel<typeof verificationLogs>;

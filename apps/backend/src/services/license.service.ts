@@ -1,9 +1,48 @@
 import { db } from '../db/db';
-import { licenseKeys, userSubmissions, type LicenseKey, type UserSubmission, type NewUserSubmission } from '../db/schema';
+import { licenseKeys, userSubmissions, verificationLogs, type LicenseKey, type UserSubmission, type NewUserSubmission, type VerificationLog } from '../db/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { generateLicense } from '../utils/licenseKeyGenerator';
 
 export class LicenseService {
+  /**
+   * Gets a single license by its ID with full submission data and verification metadata.
+   * @param id The license record ID
+   * @returns The complete license object or null if not found
+   */
+  static async getLicenseById(id: number) {
+    try {
+      const license = await db.query.licenseKeys.findFirst({
+        where: eq(licenseKeys.id, id),
+        with: {
+          submission: true,
+          verificationLogs: {
+            orderBy: [desc(verificationLogs.timestamp)],
+            limit: 50, // Get last 50 logs for history
+          },
+        },
+      });
+
+      if (!license) {
+        return null;
+      }
+
+      // Calculate metadata
+      const verificationAttempts = license.verificationLogs.length;
+      const lastVerification = license.verificationLogs[0]?.timestamp || null;
+
+      return {
+        ...license,
+        metadata: {
+          verificationAttempts,
+          lastVerification,
+        },
+      };
+    } catch (error) {
+      console.error(`Error in getLicenseById: ${error}`);
+      throw new Error('Database query failed while fetching license by ID');
+    }
+  }
+
   /**
    * Gets all licenses with pagination and optional filtering.
    * @param options Pagination and filtering options
@@ -285,15 +324,13 @@ export class LicenseService {
   /**
    * Verifies a license by machine ID.
    * @param machineId The machine ID to verify
+   * @param ipAddress Optional IP address for logging
    * @returns The verification result
    */
-  static async verifyLicense(machineId: string) {
+  static async verifyLicense(machineId: string, ipAddress?: string) {
     try {
       const license = await db.query.licenseKeys.findFirst({
-        where: and(
-          eq(licenseKeys.machineId, machineId),
-          eq(licenseKeys.status, 'active')
-        ),
+        where: eq(licenseKeys.machineId, machineId),
         with: {
           submission: true,
         },
@@ -302,15 +339,40 @@ export class LicenseService {
       if (!license) {
         return {
           valid: false,
-          message: 'No valid license found',
+          message: 'No license found for this machine ID',
         };
       }
 
-      // Check if license is expired
-      if (license.expiresAt && license.expiresAt < new Date()) {
+      let valid = true;
+      let message = 'License is valid';
+
+      if (license.status !== 'active') {
+        valid = false;
+        message = `License is ${license.status}`;
+      } else if (license.expiresAt && license.expiresAt < new Date()) {
+        valid = false;
+        message = 'License has expired';
+      }
+
+      // Log the verification attempt
+      try {
+        await db.insert(verificationLogs).values({
+          licenseKeyId: license.id,
+          machineId: machineId,
+          status: valid ? 'success' : 'failed',
+          message: message,
+          ipAddress: ipAddress,
+          timestamp: new Date(),
+        }).run();
+      } catch (logError) {
+        console.error('Failed to log verification attempt:', logError);
+        // Don't fail the verification just because logging failed
+      }
+
+      if (!valid) {
         return {
           valid: false,
-          message: 'License has expired',
+          message: message,
         };
       }
 
