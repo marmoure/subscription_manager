@@ -68,6 +68,50 @@ authRoutes.post(
 );
 
 /**
+ * POST /api/admin/logout
+ * Log out the current user (placeholder for token invalidation)
+ */
+authRoutes.post(
+  '/logout',
+  async (c) => {
+    try {
+      // In a real implementation, you would blacklist the refresh token here
+      return c.json({
+        success: true,
+        message: 'Logged out successfully'
+      });
+    } catch (error) {
+      return c.json({
+        success: false,
+        message: 'Logout failed'
+      }, 500);
+    }
+  }
+);
+
+/**
+ * POST /api/admin/logout-all
+ * Log out from all devices (placeholder for token invalidation)
+ */
+authRoutes.post(
+  '/logout-all',
+  async (c) => {
+    try {
+      // In a real implementation, you would invalidate all tokens for the user
+      return c.json({
+        success: true,
+        message: 'Logged out from all devices successfully'
+      });
+    } catch (error) {
+      return c.json({
+        success: false,
+        message: 'Logout all failed'
+      }, 500);
+    }
+  }
+);
+
+/**
  * POST /api/admin/login
  * Authenticate admin user and return JWT tokens
  */

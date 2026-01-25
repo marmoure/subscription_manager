@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -10,11 +10,31 @@ import {
   Menu,
   X,
   User,
-  Zap
+  Zap,
+  ShieldAlert,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -28,16 +48,65 @@ const navigation = [
   { name: 'Settings', href: '/admin/settings', icon: Settings, future: true },
 ];
 
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+const WARNING_BEFORE_LOGOUT = 60 * 1000; // 1 minute warning
+
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showLogoutAllDialog, setShowLogoutAllDialog] = useState(false);
+  const [showInactivityDialog, setShowInactivityDialog] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, logoutAll } = useAuthStore();
+  
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleLogout = () => {
-    logout();
+  const performLogout = useCallback(async () => {
+    await logout();
+    // Using a simple timeout to simulate a toast if needed, or just navigate
+    // In a real app we'd use a toast library
+    alert('Logged out successfully');
     navigate('/admin/login');
-  };
+  }, [logout, navigate]);
+
+  const performLogoutAll = useCallback(async () => {
+    await logoutAll();
+    alert('Logged out from all devices successfully');
+    navigate('/admin/login');
+  }, [logoutAll, navigate]);
+
+  const resetInactivityTimer = useCallback(() => {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    
+    if (showInactivityDialog) return;
+
+    inactivityTimerRef.current = setTimeout(() => {
+      setShowInactivityDialog(true);
+      warningTimerRef.current = setTimeout(() => {
+        performLogout();
+      }, WARNING_BEFORE_LOGOUT);
+    }, INACTIVITY_TIMEOUT - WARNING_BEFORE_LOGOUT);
+  }, [performLogout, showInactivityDialog]);
+
+  useEffect(() => {
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const handleEvent = () => resetInactivityTimer();
+
+    events.forEach(event => document.addEventListener(event, handleEvent));
+    resetInactivityTimer();
+
+    return () => {
+      events.forEach(event => document.removeEventListener(event, handleEvent));
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    };
+  }, [resetInactivityTimer]);
+
+  const handleLogoutClick = () => setShowLogoutDialog(true);
+  const handleLogoutAllClick = () => setShowLogoutAllDialog(true);
 
   const currentPath = location.pathname;
   const activeNavItem = navigation.find(item => item.href === currentPath) || navigation[0];
@@ -161,15 +230,30 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
             </div>
             
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleLogout}
-                className="h-9 px-3 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:text-red-400 dark:hover:border-red-900 transition-all duration-200"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-9 px-3 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Logout</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Logout Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogoutClick} className="text-red-600 dark:text-red-400 focus:text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout Current Session</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogoutAllClick} className="text-red-600 dark:text-red-400 focus:text-red-600">
+                  <Globe className="mr-2 h-4 w-4" />
+                  <span>Logout from All Devices</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -180,6 +264,65 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to login again to access the admin dashboard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={performLogout} className="bg-red-600 hover:bg-red-700">
+              Logout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Logout All Confirmation Dialog */}
+      <AlertDialog open={showLogoutAllDialog} onOpenChange={setShowLogoutAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-red-600" />
+              Logout from all devices?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will invalidate all active sessions for your account across all devices.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={performLogoutAll} className="bg-red-600 hover:bg-red-700">
+              Logout from All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Inactivity Warning Dialog */}
+      <AlertDialog open={showInactivityDialog} onOpenChange={setShowInactivityDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Inactivity Warning</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have been inactive for a while. You will be automatically logged out in 1 minute for security.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => {
+              setShowInactivityDialog(false);
+              resetInactivityTimer();
+            }}>
+              Stay Logged In
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,21 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import * as authService from '../services/auth';
 
 const refreshAccessTokenApi = async (refreshToken: string) => {
-  const response = await fetch(`${API_URL}/api/admin/refresh-token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ refreshToken }),
-  });
-  if (!response.ok) {
-     throw new Error('Failed to refresh token');
-  }
-  return await response.json();
+  return await authService.refreshAccessToken(refreshToken);
 };
 
 export interface User {
@@ -32,7 +21,8 @@ interface AuthState {
   refreshToken: string | null;
   
   login: (accessToken: string, refreshToken: string, user: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
+  logoutAll: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
   setUser: (user: User) => void;
   checkTokenExpiration: () => boolean; // Returns true if valid, false if expired
@@ -50,20 +40,37 @@ export const useAuthStore = create<AuthState>()(
         set({ isAuthenticated: true, user, accessToken, refreshToken });
       },
 
-      logout: () => {
+      logout: async () => {
+        const { refreshToken } = get();
+        if (refreshToken) {
+          try {
+            await authService.logout(refreshToken);
+          } catch (error) {
+            console.error('Logout API failed:', error);
+          }
+        }
         set({ isAuthenticated: false, user: null, accessToken: null, refreshToken: null });
+        localStorage.removeItem('auth-storage'); // Clear storage explicitly if needed
+      },
+
+      logoutAll: async () => {
+        try {
+          await authService.logoutAll();
+        } catch (error) {
+          console.error('Logout All API failed:', error);
+        }
+        set({ isAuthenticated: false, user: null, accessToken: null, refreshToken: null });
+        localStorage.removeItem('auth-storage');
       },
 
       refreshAccessToken: async () => {
         const { refreshToken } = get();
-        if (!refreshToken) throw new Error('No refresh token available');
+        if (!refreshToken) {
+          get().logout();
+          throw new Error('No refresh token available');
+        }
 
         try {
-          // We don't want to use the intercepted client here to avoid infinite loops,
-          // but refreshAccessTokenApi uses apiClient. 
-          // We handle the loop prevention in the interceptor or by using a skip-auth flag if needed.
-          // For now, let's assume the refresh endpoint is public/doesn't need the access token.
-          
           const response = await refreshAccessTokenApi(refreshToken);
           if (response.success) {
             const { accessToken, refreshToken: newRefreshToken } = response.data;
@@ -71,11 +78,11 @@ export const useAuthStore = create<AuthState>()(
             
             set({ accessToken, refreshToken: validRefreshToken });
           } else {
-             get().logout();
+             await get().logout();
              throw new Error('Refresh failed');
           }
         } catch (error) {
-          get().logout();
+          await get().logout();
           throw error;
         }
       },
@@ -110,3 +117,13 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Listen for storage changes to handle logout across tabs
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'auth-storage' && !event.newValue) {
+      // If auth-storage was cleared, log out this tab too
+      useAuthStore.getState().logout();
+    }
+  });
+}

@@ -32,3 +32,13 @@ export const refreshAccessToken = async (refreshToken: string): Promise<RefreshT
   const response = await apiClient.post<RefreshTokenResponse>('/api/admin/refresh-token', { refreshToken });
   return response.data;
 };
+
+export const logout = async (refreshToken: string): Promise<{ success: boolean }> => {
+  const response = await apiClient.post<{ success: boolean }>('/api/admin/logout', { refreshToken });
+  return response.data;
+};
+
+export const logoutAll = async (): Promise<{ success: boolean }> => {
+  const response = await apiClient.post<{ success: boolean }>('/api/admin/logout-all');
+  return response.data;
+};
