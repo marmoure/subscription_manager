@@ -25,6 +25,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { licenseRequestSchema, type LicenseRequestFormValues } from "@/schemas/licenseRequest.schema"
 import { submitLicenseRequest, ApiError } from "@/services/api"
+import { Captcha } from "@/components/Captcha"
 
 export function LicenseRequestForm() {
   const recaptchaRef = React.useRef<ReCAPTCHA>(null)
@@ -291,10 +292,11 @@ export function LicenseRequestForm() {
               name="captchaToken"
               render={() => (
                 <FormItem className="flex flex-col items-center justify-center pt-4">
+                  <FormLabel>Security Check</FormLabel>
                   <FormControl>
-                    <ReCAPTCHA
+                    <Captcha
                       ref={recaptchaRef}
-                      sitekey={siteKey}
+                      siteKey={siteKey}
                       onChange={onCaptchaChange}
                     />
                   </FormControl>
