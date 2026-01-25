@@ -41,7 +41,7 @@ export const authenticateAdmin = async (c: Context<{ Variables: AdminVariables }
       isActive: adminUsers.isActive
     })
       .from(adminUsers)
-      .where(eq(adminUsers.id, payload.userId))
+      .where(eq(adminUsers.id, payload.adminId))
       .limit(1);
 
     if (!admin) {

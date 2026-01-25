@@ -26,3 +26,10 @@ export const registerAdminSchema = z.object({
 });
 
 export type RegisterAdminInput = z.infer<typeof registerAdminSchema>;
+
+export const loginAdminSchema = z.object({
+  usernameOrEmail: z.string().min(1, 'Username or email is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export type LoginAdminInput = z.infer<typeof loginAdminSchema>;

@@ -2,17 +2,18 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
 
 export interface TokenPayload {
-  userId: number;
+  adminId: number;
   username: string;
+  email: string;
 }
 
 /**
  * Generates an access token for an admin user
  * @param payload The data to include in the JWT
- * @param expiresIn Token expiration time (e.g., '1h', '2h')
+ * @param expiresIn Token expiration time (e.g., '1h', '24h')
  * @returns A signed JWT string
  */
-export const generateAccessToken = (payload: TokenPayload, expiresIn: string = '1h'): string => {
+export const generateAccessToken = (payload: TokenPayload, expiresIn: string = '24h'): string => {
   return jwt.sign(payload, config.JWT_SECRET, { expiresIn: expiresIn as any });
 };
 
@@ -55,5 +56,9 @@ export const verifyToken = (token: string): TokenPayload => {
  */
 export const refreshAccessToken = (refreshToken: string): string => {
   const payload = verifyToken(refreshToken);
-  return generateAccessToken({ userId: payload.userId, username: payload.username });
+  return generateAccessToken({
+    adminId: payload.adminId,
+    username: payload.username,
+    email: payload.email
+  });
 };
