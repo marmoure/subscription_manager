@@ -163,8 +163,8 @@ export function LicenseRequestForm() {
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <FormField
                 control={form.control}
                 name="name"
@@ -175,7 +175,7 @@ export function LicenseRequestForm() {
                       <Input
                         placeholder="John Doe"
                         {...field}
-                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                        className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -194,7 +194,7 @@ export function LicenseRequestForm() {
                       <Input
                         placeholder="My Awesome Shop"
                         {...field}
-                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                        className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -214,7 +214,7 @@ export function LicenseRequestForm() {
                         placeholder="john@example.com"
                         type="email"
                         {...field}
-                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                        className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -234,7 +234,7 @@ export function LicenseRequestForm() {
                         placeholder="+1234567890"
                         type="tel"
                         {...field}
-                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                        className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -255,7 +255,7 @@ export function LicenseRequestForm() {
                         min={1}
                         max={50}
                         {...field}
-                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                        className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -275,7 +275,7 @@ export function LicenseRequestForm() {
                     <Input
                       placeholder="XXXX-XXXX-XXXX-XXXX"
                       {...field}
-                      className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                       disabled={isLoading}
                     />
                   </FormControl>
@@ -298,6 +298,7 @@ export function LicenseRequestForm() {
                       ref={recaptchaRef}
                       siteKey={siteKey}
                       onChange={onCaptchaChange}
+                      className="transform scale-90 sm:scale-100 origin-center"
                     />
                   </FormControl>
                   <FormMessage />
@@ -305,10 +306,10 @@ export function LicenseRequestForm() {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-12 text-lg" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Submitting...
                 </>
               ) : (
