@@ -1,4 +1,5 @@
-import { apiClient } from './api';
+import { ApiError } from './api';
+import { client } from '../lib/rpc-client';
 
 export interface LicenseListResponse {
   success: boolean;
@@ -88,23 +89,37 @@ export const getLicenses = async (
   status?: string,
   search?: string
 ): Promise<LicenseListResponse> => {
-  const params = new URLSearchParams();
-  params.append('page', page.toString());
-  params.append('limit', limit.toString());
-  if (status) {
-    params.append('status', status);
-  }
-  if (search) {
-    params.append('search', search);
+  const query: Record<string, string> = {
+    page: page.toString(),
+    limit: limit.toString(),
+  };
+  
+  if (status) query.status = status;
+  if (search) query.search = search;
+
+  const response = await client.api.admin.licenses.$get({ query });
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to fetch licenses', errorData);
   }
 
-  const response = await apiClient.get<LicenseListResponse>(`/api/admin/licenses?${params.toString()}`);
-  return response.data;
+  const result = await response.json();
+  return result as unknown as LicenseListResponse;
 };
 
 export const getLicenseDetails = async (id: number): Promise<{ success: boolean; data: LicenseDataItem; message?: string }> => {
-  const response = await apiClient.get<{ success: boolean; data: LicenseDataItem; message?: string }>(`/api/admin/licenses/${id}`);
-  return response.data;
+  const response = await client.api.admin.licenses[':id'].$get({
+    param: { id: id.toString() }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to fetch license details', errorData);
+  }
+
+  const result = await response.json();
+  return result as unknown as { success: boolean; data: LicenseDataItem; message?: string };
 };
 
 export const getSubmissions = async (
@@ -116,17 +131,26 @@ export const getSubmissions = async (
   minCashiers?: number,
   maxCashiers?: number
 ): Promise<SubmissionListResponse> => {
-  const params = new URLSearchParams();
-  params.append('page', page.toString());
-  params.append('limit', limit.toString());
-  if (search) params.append('search', search);
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
-  if (minCashiers !== undefined) params.append('minCashiers', minCashiers.toString());
-  if (maxCashiers !== undefined) params.append('maxCashiers', maxCashiers.toString());
+  const query: Record<string, string> = {
+    page: page.toString(),
+    limit: limit.toString(),
+  };
 
-  const response = await apiClient.get<SubmissionListResponse>(`/api/admin/submissions?${params.toString()}`);
-  return response.data;
+  if (search) query.search = search;
+  if (startDate) query.startDate = startDate;
+  if (endDate) query.endDate = endDate;
+  if (minCashiers !== undefined) query.minCashiers = minCashiers.toString();
+  if (maxCashiers !== undefined) query.maxCashiers = maxCashiers.toString();
+
+  const response = await client.api.admin.submissions.$get({ query });
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to fetch submissions', errorData);
+  }
+
+  const result = await response.json();
+  return result as unknown as SubmissionListResponse;
 };
 
 export const updateLicenseStatus = async (
@@ -134,21 +158,36 @@ export const updateLicenseStatus = async (
   status: 'active' | 'inactive' | 'revoked',
   reason?: string
 ): Promise<{ success: boolean; message: string; data: any }> => {
-  const response = await apiClient.patch(`/api/admin/licenses/${id}/status`, {
-    status,
-    reason,
+  const response = await (client.api.admin.licenses[':id'].status.$patch as any)({
+    param: { id: id.toString() },
+    json: { status, reason }
   });
-  return response.data;
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to update license status', errorData);
+  }
+
+  const result = await response.json();
+  return result as unknown as { success: boolean; message: string; data: any };
 };
 
 export const revokeLicense = async (
   id: number,
   reason?: string
 ): Promise<{ success: boolean; message: string; data: any }> => {
-  const response = await apiClient.delete(`/api/admin/licenses/${id}`, {
-    data: { reason },
+  const response = await (client.api.admin.licenses[':id'].$delete as any)({
+    param: { id: id.toString() },
+    json: { reason: reason || '' } // Schema might require reason or optional
   });
-  return response.data;
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to revoke license', errorData);
+  }
+
+  const result = await response.json();
+  return result as unknown as { success: boolean; message: string; data: any };
 };
 
 export interface DashboardStatsResponse {
@@ -186,7 +225,15 @@ export interface DashboardStatsResponse {
 }
 
 export const getDashboardStats = async (): Promise<DashboardStatsResponse> => {
-  const response = await apiClient.get<DashboardStatsResponse>('/api/admin/dashboard/stats');
-  return response.data;
+  const response = await client.api.admin.dashboard.stats.$get();
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to fetch dashboard stats', errorData);
+  }
+
+  const result = await response.json();
+  return result as unknown as DashboardStatsResponse;
 };
+
 

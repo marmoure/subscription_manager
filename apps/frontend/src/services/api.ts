@@ -1,83 +1,5 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { LicenseRequestFormValues } from '@/schemas/licenseRequest.schema';
-import { useAuthStore } from '../stores/authStore';
-
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-export const apiClient = axios.create({
-  baseURL: API_URL,
-  timeout: 30000, // 30 seconds
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Simple retry logic for network errors
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
-
-// Request Interceptor
-apiClient.interceptors.request.use(
-  (config) => {
-    const { accessToken } = useAuthStore.getState();
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response Interceptor
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const config = error.config as InternalAxiosRequestConfig & { retryCount?: number; _retry?: boolean };
-    
-    if (!config) {
-      return Promise.reject(error);
-    }
-
-    // Handle 401 Unauthorized (Token Expiration)
-    if (error.response?.status === 401 && !config._retry) {
-      config._retry = true;
-      try {
-        await useAuthStore.getState().refreshAccessToken();
-        const { accessToken } = useAuthStore.getState();
-        if (accessToken) {
-            config.headers.Authorization = `Bearer ${accessToken}`;
-        }
-        return apiClient(config);
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
-      }
-    }
-
-    // Check if retryCount is below limit for other errors
-    if ((config.retryCount || 0) >= MAX_RETRIES) {
-      return Promise.reject(error);
-    }
-    
-    // Only retry on network errors or 5xx server errors (except 500 which might be application error, but 502/503/504 are usually retryable)
-    if (!error.response || (error.response.status >= 500 && error.response.status < 600)) {
-       config.retryCount = (config.retryCount || 0) + 1;
-       
-       // Create a promise to handle the delay
-       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY * config.retryCount!));
-       
-       return apiClient(config);
-    }
-    
-    return Promise.reject(error);
-  }
-);
-
-// Add retryCount to AxiosRequestConfig definition for TypeScript
-declare module 'axios' {
-  export interface AxiosRequestConfig {
-    retryCount?: number;
-  }
-}
+import { client } from '../lib/rpc-client';
 
 export interface LicenseResponse {
   success: boolean;
@@ -97,23 +19,41 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Submits a new license request.
+ * @param data The license request form data
+ */
 export const submitLicenseRequest = async (data: LicenseRequestFormValues): Promise<LicenseResponse> => {
-  try {
-    const response = await apiClient.post<LicenseResponse>('/api/public/submit-license-request', data);
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-        if (error.code === 'ECONNABORTED') {
-             throw new Error('Request timed out. Please try again.');
-        }
-        
-        // Handle API specific error responses
-        const errorData = error.response?.data;
-        if (errorData) {
-             const message = errorData.message || errorData.error || 'An unexpected error occurred';
-             throw new ApiError(message, errorData);
-        }
-    }
-    throw error;
+  const response = await client.api.public['submit-license-request'].$post({
+    json: data
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to submit license request', errorData);
   }
+
+  const result = await response.json();
+  // Ensure the result matches LicenseResponse structure.
+  // The backend returns { success: true, message: string, data: { licenseKey, expiresAt } }
+  // which matches LicenseResponse.
+  return result as unknown as LicenseResponse;
 };
+
+/**
+ * Verifies a license key by machine ID.
+ * @param machineId The machine ID to verify
+ */
+export const verifyLicense = async (machineId: string) => {
+  const response = await client.api.v1['verify-license'].$post({
+    json: { machineId }
+  });
+
+  if (!response.ok) {
+     const errorData = await response.json() as any;
+     throw new ApiError(errorData.message || 'Failed to verify license', errorData);
+  }
+
+  return await response.json();
+};
+

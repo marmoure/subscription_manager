@@ -1,5 +1,6 @@
 import { hc } from 'hono/client';
 import type { AppType } from '../../../backend/src/index';
+import { useAuthStore } from '../stores/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -49,6 +50,46 @@ const fetchWithRetry = async (
   }
 };
 
+const authenticatedFetch = async (
+  input: string | URL | Request,
+  init?: RequestInit
+): Promise<Response> => {
+  const token = useAuthStore.getState().accessToken;
+  const headers = new Headers(init?.headers);
+  
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const newInit = { ...init, headers };
+
+  let response = await fetchWithRetry(input, newInit);
+
+  if (response.status === 401) {
+    // Avoid infinite loops if the refresh token endpoint itself returns 401
+    // We can check the URL or some other indicator
+    if (input.toString().includes('refresh-token') || input.toString().includes('login')) {
+       return response;
+    }
+
+    try {
+      await useAuthStore.getState().refreshAccessToken();
+      const newToken = useAuthStore.getState().accessToken;
+      
+      if (newToken) {
+        headers.set('Authorization', `Bearer ${newToken}`);
+        const retryInit = { ...newInit, headers };
+        return await fetchWithRetry(input, retryInit);
+      }
+    } catch (error) {
+      // Refresh failed, return original response
+      return response;
+    }
+  }
+
+  return response;
+};
+
 /**
  * Hono RPC client for type-safe API communication
  */
@@ -56,7 +97,7 @@ let clientInstance: ReturnType<typeof hc<AppType>>;
 
 try {
   clientInstance = hc<AppType>(API_URL, {
-    fetch: (input: string | URL | Request, init?: RequestInit) => fetchWithRetry(input, init),
+    fetch: authenticatedFetch,
   });
 } catch (error) {
   console.error('Failed to initialize Hono RPC client:', error);
