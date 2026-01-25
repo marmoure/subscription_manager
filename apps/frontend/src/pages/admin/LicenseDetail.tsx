@@ -62,14 +62,14 @@ const LicenseDetail: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getLicenseDetails(licenseId);
-      if (response.success) {
-        setLicense(response.data);
+      const data = await getLicenseDetails(licenseId);
+      if (data) {
+        setLicense(data);
       } else {
-        setError(response.message || 'License not found');
+        setError('License not found');
       }
     } catch (err: any) {
-      if (err.response?.status === 404) {
+      if (err.status === 404) {
         setError('License not found');
       } else {
         setError(err.message || 'An error occurred while fetching license details');
@@ -100,27 +100,22 @@ const LicenseDetail: React.FC = () => {
     const oldStatus = license.status as 'active' | 'inactive';
     setIsUpdating(true);
     try {
-      let response;
       if (pendingStatus === 'revoked') {
-        response = await revokeLicense(license.id, reason);
+        await revokeLicense(license.id, reason);
         setPreviousStatus(null);
       } else {
-        response = await updateLicenseStatus(license.id, pendingStatus, reason);
+        await updateLicenseStatus(license.id, pendingStatus, reason);
         setPreviousStatus(oldStatus);
       }
 
-      if (response.success) {
-        setSuccessMessage(`License status successfully changed to ${pendingStatus}`);
-        setIsConfirmOpen(false);
-        fetchLicenseDetails();
-        // Clear success message after 10 seconds to give time for Undo
-        setTimeout(() => {
-          setSuccessMessage(null);
-          setPreviousStatus(null);
-        }, 10000);
-      } else {
-        setError(response.message || 'Failed to update status');
-      }
+      setSuccessMessage(`License status successfully changed to ${pendingStatus}`);
+      setIsConfirmOpen(false);
+      fetchLicenseDetails();
+      // Clear success message after 10 seconds to give time for Undo
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setPreviousStatus(null);
+      }, 10000);
     } catch (err: any) {
       setError(err.message || 'Error updating status');
     } finally {
@@ -134,15 +129,11 @@ const LicenseDetail: React.FC = () => {
     
     setIsUpdating(true);
     try {
-      const response = await updateLicenseStatus(license.id, previousStatus, 'Undo previous status change');
-      if (response.success) {
-        setSuccessMessage('Action undone successfully');
-        setPreviousStatus(null);
-        fetchLicenseDetails();
-        setTimeout(() => setSuccessMessage(null), 5000);
-      } else {
-        setError(response.message || 'Failed to undo action');
-      }
+      await updateLicenseStatus(license.id, previousStatus, 'Undo previous status change');
+      setSuccessMessage('Action undone successfully');
+      setPreviousStatus(null);
+      fetchLicenseDetails();
+      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err: any) {
       setError(err.message || 'Error undoing action');
     } finally {

@@ -20,16 +20,16 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<DashboardStatsResponse['data'] | null>(null);
+  const [data, setData] = useState<DashboardStatsResponse | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [dateRange, setDateRange] = useState('30'); // Days
 
   const fetchData = useCallback(async () => {
     try {
       // In a real app we would pass dateRange to the API if supported
-      const response = await getDashboardStats();
-      if (response.success) {
-        setData(response.data);
+      const stats = await getDashboardStats();
+      if (stats) {
+        setData(stats);
         setLastUpdated(new Date());
       }
     } catch (error) {

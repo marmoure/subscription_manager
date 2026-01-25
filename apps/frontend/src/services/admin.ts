@@ -20,13 +20,13 @@ export interface SubmissionDataItem {
   shopName: string;
   machineId: string;
   numberOfCashiers: number;
-  submissionDate: string;
+  submissionDate: string | Date;
   ipAddress?: string;
   licenseKey?: {
     id: number;
     licenseKey: string;
     status: string;
-    expiresAt: string | null;
+    expiresAt: string | Date | null;
   } | null;
 }
 
@@ -46,10 +46,10 @@ export interface LicenseDataItem {
   licenseKey: string;
   machineId: string;
   status: 'active' | 'inactive' | 'revoked';
-  createdAt: string;
-  updatedAt: string;
-  expiresAt: string | null;
-  revokedAt: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  expiresAt: string | Date | null;
+  revokedAt: string | Date | null;
   submission: {
     id: number;
     name: string;
@@ -57,11 +57,11 @@ export interface LicenseDataItem {
     phone: string;
     shopName: string;
     numberOfCashiers: number;
-    submissionDate: string;
+    submissionDate: string | Date;
   } | null;
   verificationLogs?: Array<{
     id: number;
-    timestamp: string;
+    timestamp: string | Date;
     status: 'success' | 'failed';
     message: string;
     ipAddress: string | null;
@@ -71,7 +71,7 @@ export interface LicenseDataItem {
     oldStatus: string | null;
     newStatus: string;
     reason: string | null;
-    timestamp: string;
+    timestamp: string | Date;
     admin: {
       username: string;
       email: string;
@@ -79,7 +79,7 @@ export interface LicenseDataItem {
   }>;
   metadata?: {
     verificationAttempts: number;
-    lastVerification: string | null;
+    lastVerification: string | Date | null;
   };
 }
 
@@ -108,7 +108,7 @@ export const getLicenses = async (
   return result as unknown as LicenseListResponse;
 };
 
-export const getLicenseDetails = async (id: number): Promise<{ success: boolean; data: LicenseDataItem; message?: string }> => {
+export const getLicenseDetails = async (id: number): Promise<LicenseDataItem> => {
   const response = await client.api.admin.licenses[':id'].$get({
     param: { id: id.toString() }
   });
@@ -119,7 +119,7 @@ export const getLicenseDetails = async (id: number): Promise<{ success: boolean;
   }
 
   const result = await response.json();
-  return result as unknown as { success: boolean; data: LicenseDataItem; message?: string };
+  return result as any;
 };
 
 export const getSubmissions = async (
@@ -157,7 +157,7 @@ export const updateLicenseStatus = async (
   id: number,
   status: 'active' | 'inactive' | 'revoked',
   reason?: string
-): Promise<{ success: boolean; message: string; data: any }> => {
+): Promise<any> => {
   const response = await (client.api.admin.licenses[':id'].status.$patch as any)({
     param: { id: id.toString() },
     json: { status, reason }
@@ -168,17 +168,16 @@ export const updateLicenseStatus = async (
     throw new ApiError(errorData.message || 'Failed to update license status', errorData);
   }
 
-  const result = await response.json();
-  return result as unknown as { success: boolean; message: string; data: any };
+  return await response.json();
 };
 
 export const revokeLicense = async (
   id: number,
   reason?: string
-): Promise<{ success: boolean; message: string; data: any }> => {
+): Promise<any> => {
   const response = await (client.api.admin.licenses[':id'].$delete as any)({
     param: { id: id.toString() },
-    json: { reason: reason || '' } // Schema might require reason or optional
+    json: { reason: reason || '' } 
   });
 
   if (!response.ok) {
@@ -186,41 +185,37 @@ export const revokeLicense = async (
     throw new ApiError(errorData.message || 'Failed to revoke license', errorData);
   }
 
-  const result = await response.json();
-  return result as unknown as { success: boolean; message: string; data: any };
+  return await response.json();
 };
 
 export interface DashboardStatsResponse {
-  success: boolean;
-  data: {
-    stats: {
-      totalLicenses: number;
-      activeLicenses: number;
-      submissionsThisMonth: number;
-      growth: number;
-    };
-    charts: {
-      licensesOverTime: { date: string; count: number }[];
-      licenseStatus: { status: string; count: number }[];
-      submissionsByDay: { date: string; count: number }[];
-    };
-    activity: {
-      recentSubmissions: {
-        id: number;
-        name: string;
-        email: string;
-        submissionDate: string;
-        shopName: string;
-      }[];
-      recentStatusChanges: {
-        id: number;
-        oldStatus: string | null;
-        newStatus: string;
-        timestamp: string;
-        adminUsername: string | null;
-        licenseKey: { licenseKey: string } | null;
-      }[];
-    };
+  stats: {
+    totalLicenses: number;
+    activeLicenses: number;
+    submissionsThisMonth: number;
+    growth: number;
+  };
+  charts: {
+    licensesOverTime: { date: string; count: number }[];
+    licenseStatus: { status: string; count: number }[];
+    submissionsByDay: { date: string; count: number }[];
+  };
+  activity: {
+    recentSubmissions: {
+      id: number;
+      name: string;
+      email: string;
+      submissionDate: string;
+      shopName: string;
+    }[];
+    recentStatusChanges: {
+      id: number;
+      oldStatus: string | null;
+      newStatus: string;
+      timestamp: string;
+      adminUsername: string | null;
+      licenseKey: { licenseKey: string } | null;
+    }[];
   };
 }
 
@@ -233,7 +228,7 @@ export const getDashboardStats = async (): Promise<DashboardStatsResponse> => {
   }
 
   const result = await response.json();
-  return result as unknown as DashboardStatsResponse;
+  return result as any;
 };
 
 

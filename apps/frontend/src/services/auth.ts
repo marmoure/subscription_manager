@@ -24,58 +24,34 @@ export interface RefreshTokenResponse {
   };
 }
 
-export const login = async (credentials: LoginFormValues): Promise<AuthResponse> => {
-
+export const login = async (credentials: LoginFormValues): Promise<AuthResponse['data']> => {
   const response = await client.api.admin.login.$post({
-
     json: credentials
-
   });
 
-
-
   if (!response.ok) {
-
     const errorData = await response.json() as any;
-
     throw new ApiError(errorData.message || 'Login failed', errorData);
-
   }
 
-
-
   const result = await response.json();
-
-  return result as unknown as AuthResponse;
-
+  return result as any;
 };
 
 
 
-export const refreshAccessToken = async (refreshToken: string): Promise<RefreshTokenResponse> => {
-
+export const refreshAccessToken = async (refreshToken: string): Promise<RefreshTokenResponse['data']> => {
   const response = await client.api.admin['refresh-token'].$post({
-
     json: { refreshToken }
-
   });
 
-
-
   if (!response.ok) {
-
     const errorData = await response.json() as any;
-
     throw new ApiError(errorData.message || 'Token refresh failed', errorData);
-
   }
 
-
-
   const result = await response.json();
-
-  return result as unknown as RefreshTokenResponse;
-
+  return result as any;
 };
 
 

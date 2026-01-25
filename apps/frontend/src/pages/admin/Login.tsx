@@ -41,9 +41,9 @@ const Login = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiLogin(values);
-      if (response.success) {
-        login(response.data.accessToken, response.data.refreshToken, response.data.admin);
+      const data = await apiLogin(values);
+      if (data && data.accessToken) {
+        login(data.accessToken, data.refreshToken, data.admin);
         navigate('/admin');
       } else {
          setError('Login failed. Please check your credentials.');

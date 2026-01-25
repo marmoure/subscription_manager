@@ -71,9 +71,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const response = await refreshAccessTokenApi(refreshToken);
-          if (response.success) {
-            const { accessToken, refreshToken: newRefreshToken } = response.data;
+          const data = await refreshAccessTokenApi(refreshToken);
+          if (data && data.accessToken) {
+            const { accessToken, refreshToken: newRefreshToken } = data;
             const validRefreshToken = newRefreshToken || refreshToken;
             
             set({ accessToken, refreshToken: validRefreshToken });
