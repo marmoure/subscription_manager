@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   CreditCard,
   Search,
@@ -8,8 +9,6 @@ import {
   RotateCcw,
   Trash2,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   ExternalLink
 } from 'lucide-react';
 import {
@@ -27,25 +26,45 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { Pagination } from '@/components/Pagination';
 import { getLicenses, updateLicenseStatus, revokeLicense, type LicenseDataItem } from '@/services/admin';
 
 const Licenses: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [licenses, setLicenses] = useState<LicenseDataItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  
+  // Get initial page from URL or default to 1
+  const initialPage = parseInt(searchParams.get('page') || '1', 10);
+  const initialLimit = parseInt(searchParams.get('limit') || '20', 10);
+  
+  const [page, setPage] = useState(initialPage);
+  const [pageSize, setPageSize] = useState(initialLimit);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [totalResults, setTotalResults] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
-  const fetchLicenses = async () => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(1); // Reset to first page on search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchLicenses = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getLicenses(page, 10, statusFilter || undefined);
+      const response = await getLicenses(page, pageSize, statusFilter || undefined, debouncedSearchTerm || undefined);
       if (response.success) {
         setLicenses(response.data);
         setTotalPages(response.pagination.totalPages);
+        setTotalResults(response.pagination.total);
       } else {
         setError('Failed to fetch licenses');
       }
@@ -54,11 +73,28 @@ const Licenses: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, statusFilter, debouncedSearchTerm]);
 
   useEffect(() => {
     fetchLicenses();
-  }, [page, statusFilter]);
+    
+    // Update URL query params
+    const params: any = { page: page.toString() };
+    if (pageSize !== 20) params.limit = pageSize.toString();
+    if (statusFilter) params.status = statusFilter;
+    if (searchTerm) params.q = searchTerm;
+    
+    setSearchParams(params, { replace: true });
+  }, [page, pageSize, statusFilter, debouncedSearchTerm, fetchLicenses, setSearchParams]);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to first page when changing page size
+  };
 
   const handleStatusChange = async (id: number, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
@@ -113,13 +149,6 @@ const Licenses: React.FC = () => {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
-  const filteredLicenses = licenses.filter(license => 
-    license.licenseKey.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    license.submission?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    license.submission?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    license.machineId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <AdminLayout>
@@ -203,7 +232,7 @@ const Licenses: React.FC = () => {
                         <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
                       </TableRow>
                     ))
-                  ) : filteredLicenses.length === 0 ? (
+                  ) : licenses.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="h-32 text-center">
                         <div className="flex flex-col items-center justify-center text-muted-foreground">
@@ -213,7 +242,7 @@ const Licenses: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredLicenses.map((license) => (
+                    licenses.map((license) => (
                       <TableRow key={license.id}>
                         <TableCell className="font-mono text-xs font-semibold">
                           {license.licenseKey}
@@ -282,33 +311,14 @@ const Licenses: React.FC = () => {
               </Table>
             </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6">
-                <p className="text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1 || loading}
-                  >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages || loading}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
+              totalResults={totalResults}
+            />
           </CardContent>
         </Card>
       </div>

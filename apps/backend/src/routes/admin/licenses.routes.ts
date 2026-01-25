@@ -24,13 +24,14 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
     authenticateAdmin,
     zValidator('query', listLicensesQuerySchema),
     async (c) => {
-      const { page, limit, status } = (c as any).get('validated') as ListLicensesQueryInput;
+      const { page, limit, status, search } = (c as any).get('validated') as ListLicensesQueryInput;
       
       try {
         const result = await LicenseService.getAllLicenses({
           page,
           limit,
           status: status as 'active' | 'inactive' | 'revoked' | undefined,
+          search,
         });
         
         return c.json({

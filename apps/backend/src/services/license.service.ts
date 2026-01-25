@@ -1,6 +1,6 @@
 import { db } from '../db/db';
 import { licenseKeys, userSubmissions, verificationLogs, licenseStatusLogs, adminUsers, type LicenseKey, type UserSubmission, type NewUserSubmission, type VerificationLog, type LicenseStatusLog } from '../db/schema';
-import { eq, desc, and, sql } from 'drizzle-orm';
+import { eq, desc, and, sql, or, like } from 'drizzle-orm';
 import { generateLicense } from '../utils/licenseKeyGenerator';
 
 export class LicenseService {
@@ -52,17 +52,35 @@ export class LicenseService {
     page: number;
     limit: number;
     status?: 'active' | 'inactive' | 'revoked';
+    search?: string;
   }) {
-    const { page, limit, status } = options;
+    const { page, limit, status, search } = options;
     const offset = (page - 1) * limit;
 
     try {
-      const whereClause = status ? eq(licenseKeys.status, status) : undefined;
+      const filters = [];
+      if (status) {
+        filters.push(eq(licenseKeys.status, status));
+      }
+      
+      if (search) {
+        const searchPattern = `%${search}%`;
+        filters.push(or(
+          like(licenseKeys.licenseKey, searchPattern),
+          like(licenseKeys.machineId, searchPattern),
+          like(userSubmissions.name, searchPattern),
+          like(userSubmissions.email, searchPattern),
+          like(userSubmissions.shopName, searchPattern)
+        ));
+      }
+
+      const whereClause = filters.length > 0 ? and(...filters) : undefined;
 
       // Count total matches for pagination
       const [totalResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(licenseKeys)
+        .leftJoin(userSubmissions, eq(licenseKeys.id, userSubmissions.licenseKeyId))
         .where(whereClause);
 
       const total = totalResult?.count || 0;
