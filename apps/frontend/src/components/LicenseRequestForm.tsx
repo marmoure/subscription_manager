@@ -42,7 +42,7 @@ export function LicenseRequestForm() {
       shopName: "",
       email: "",
       numberOfCashiers: 1,
-      captcha: "",
+      captchaToken: "",
     },
     mode: "onBlur",
   })
@@ -62,26 +62,26 @@ export function LicenseRequestForm() {
       } else {
         setError(response.message || "An unknown error occurred.")
         recaptchaRef.current?.reset()
-        form.setValue("captcha", "")
+        form.setValue("captchaToken", "")
       }
     } catch (err: any) {
       console.error(err)
-      
+
       if (err instanceof ApiError && err.data?.errors?.fieldErrors) {
         const fieldErrors = err.data.errors.fieldErrors;
         Object.keys(fieldErrors).forEach((key) => {
-           const message = fieldErrors[key]?.[0]; 
-           if (message) {
-             form.setError(key as any, { message });
-           }
+          const message = fieldErrors[key]?.[0];
+          if (message) {
+            form.setError(key as any, { message });
+          }
         });
         setError("Please check the form for errors.");
       } else {
         setError(err.message || "Failed to submit request. Please try again.")
       }
-      
+
       recaptchaRef.current?.reset()
-      form.setValue("captcha", "")
+      form.setValue("captchaToken", "")
     } finally {
       setIsLoading(false)
     }
@@ -89,10 +89,10 @@ export function LicenseRequestForm() {
 
   const onCaptchaChange = (token: string | null) => {
     if (token) {
-      form.setValue("captcha", token)
-      form.clearErrors("captcha")
+      form.setValue("captchaToken", token)
+      form.clearErrors("captchaToken")
     } else {
-      form.setValue("captcha", "")
+      form.setValue("captchaToken", "")
     }
   }
 
@@ -103,7 +103,7 @@ export function LicenseRequestForm() {
   }
 
   // Use a dummy site key for development/demo if one isn't provided in env
-  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" 
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 
   if (licenseData) {
     return (
@@ -131,8 +131,8 @@ export function LicenseRequestForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button 
-            className="w-full" 
+          <Button
+            className="w-full"
             onClick={() => setLicenseData(null)}
           >
             Request Another License
@@ -171,9 +171,9 @@ export function LicenseRequestForm() {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="John Doe" 
-                        {...field} 
+                      <Input
+                        placeholder="John Doe"
+                        {...field}
                         className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
                         disabled={isLoading}
                       />
@@ -190,9 +190,9 @@ export function LicenseRequestForm() {
                   <FormItem>
                     <FormLabel>Shop Name</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="My Awesome Shop" 
-                        {...field} 
+                      <Input
+                        placeholder="My Awesome Shop"
+                        {...field}
                         className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
                         disabled={isLoading}
                       />
@@ -209,10 +209,10 @@ export function LicenseRequestForm() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="john@example.com" 
-                        type="email" 
-                        {...field} 
+                      <Input
+                        placeholder="john@example.com"
+                        type="email"
+                        {...field}
                         className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
                         disabled={isLoading}
                       />
@@ -229,10 +229,10 @@ export function LicenseRequestForm() {
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="+1234567890" 
-                        type="tel" 
-                        {...field} 
+                      <Input
+                        placeholder="+1234567890"
+                        type="tel"
+                        {...field}
                         className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
                         disabled={isLoading}
                       />
@@ -249,11 +249,11 @@ export function LicenseRequestForm() {
                   <FormItem>
                     <FormLabel>Number of Cashiers</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        min={1} 
+                      <Input
+                        type="number"
+                        min={1}
                         max={50}
-                        {...field} 
+                        {...field}
                         className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
                         disabled={isLoading}
                       />
@@ -271,9 +271,9 @@ export function LicenseRequestForm() {
                 <FormItem>
                   <FormLabel>Machine ID</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="XXXX-XXXX-XXXX-XXXX" 
-                      {...field} 
+                    <Input
+                      placeholder="XXXX-XXXX-XXXX-XXXX"
+                      {...field}
                       className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
                       disabled={isLoading}
                     />
@@ -288,7 +288,7 @@ export function LicenseRequestForm() {
 
             <FormField
               control={form.control}
-              name="captcha"
+              name="captchaToken"
               render={() => (
                 <FormItem className="flex flex-col items-center justify-center pt-4">
                   <FormControl>

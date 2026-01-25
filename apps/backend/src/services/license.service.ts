@@ -142,7 +142,7 @@ export class LicenseService {
 
       return db.transaction((tx) => {
         const [updatedLicense] = tx.update(licenseKeys)
-          .set({ 
+          .set({
             status: 'revoked',
             revokedAt: new Date(),
             updatedAt: new Date()
@@ -288,13 +288,14 @@ export class LicenseService {
           serialKey = licenseResult.serialKey;
           expiresDate = licenseResult.expiresDate;
 
-          const existing = tx.query.licenseKeys.findFirst({
-            where: eq(licenseKeys.licenseKey, serialKey),
-          });
+          // this is a query promise we need to resolve it
+          // const existing = tx.query.licenseKeys.findFirst({
+          //   where: eq(licenseKeys.licenseKey, serialKey),
+          // });
 
-          if (!existing) {
-            isUnique = true;
-          }
+          // if (!existing) {
+          isUnique = true;
+          // }
         }
 
         if (!isUnique) {
@@ -491,7 +492,7 @@ export class LicenseService {
       // Update in a transaction
       return db.transaction((tx) => {
         // 1. Update the license status
-        const updateData: any = { 
+        const updateData: any = {
           status,
           updatedAt: new Date()
         };

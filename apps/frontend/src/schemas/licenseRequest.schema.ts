@@ -23,7 +23,7 @@ export const licenseRequestSchema = z.object({
     .min(1, 'Number of cashiers must be at least 1')
     .max(50, 'Number of cashiers cannot exceed 50'),
 
-  captcha: z.string()
+  captchaToken: z.string()
     .min(1, 'Please verify you are not a robot')
 });
 

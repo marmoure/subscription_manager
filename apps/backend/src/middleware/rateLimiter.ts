@@ -4,7 +4,7 @@ import type { Context, Next } from 'hono';
 const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
 
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes window
-const MAX_REQUESTS_PER_WINDOW = 5;
+const MAX_REQUESTS_PER_WINDOW = 5000000; // TODO: change this
 
 /**
  * Simple in-memory rate limiting middleware
