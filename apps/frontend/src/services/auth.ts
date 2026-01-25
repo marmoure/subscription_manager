@@ -1,0 +1,35 @@
+import { apiClient } from './api';
+import { LoginFormValues } from '../schemas/auth.schema';
+
+export interface AuthResponse {
+  success: boolean;
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    admin: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  };
+}
+
+export const login = async (credentials: LoginFormValues): Promise<AuthResponse> => {
+  const response = await apiClient.post<AuthResponse>('/api/admin/login', credentials);
+  return response.data;
+};
+
+export const setTokens = (accessToken: string, refreshToken: string) => {
+  localStorage.setItem('accessToken', accessToken);
+  localStorage.setItem('refreshToken', refreshToken);
+};
+
+export const clearTokens = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+};
+
+export const getAccessToken = () => localStorage.getItem('accessToken');
+export const getRefreshToken = () => localStorage.getItem('refreshToken');
+
+export const isAuthenticated = () => !!getAccessToken();

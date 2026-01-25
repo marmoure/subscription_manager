@@ -1,9 +1,9 @@
 import axios, { AxiosError } from 'axios';
 import { LicenseRequestFormValues } from '@/schemas/licenseRequest.schema';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: API_URL,
   timeout: 30000, // 30 seconds
   headers: {
