@@ -17,7 +17,7 @@ const authRoutes = new Hono();
 authRoutes.post(
   '/login',
   rateLimiter,
-  zValidator(loginAdminSchema),
+  zValidator('json', loginAdminSchema),
   async (c) => {
     try {
       const { usernameOrEmail, password } = (c as any).get('validated') as LoginAdminInput;
@@ -95,7 +95,7 @@ authRoutes.post(
  */
 authRoutes.post(
   '/register',
-  zValidator(registerAdminSchema),
+  zValidator('json', registerAdminSchema),
   async (c) => {
     try {
       // 1. Check if any admin users exist

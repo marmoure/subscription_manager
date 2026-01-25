@@ -11,7 +11,7 @@ const apiRoutes = new Hono()
   .post(
     '/verify-license',
     validateApiKey,
-    zValidator(verifyLicenseSchema),
+    zValidator('json', verifyLicenseSchema),
     async (c) => {
       const { machineId } = (c as any).get('validated') as VerifyLicenseInput;
       

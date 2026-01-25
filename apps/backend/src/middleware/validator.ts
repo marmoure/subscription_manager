@@ -1,14 +1,23 @@
 import { z } from 'zod';
 import type { Context, Next } from 'hono';
 
+type ValidationTarget = 'json' | 'query';
+
 /**
  * Simple Zod validator middleware for Hono
  * Mimics @hono/zod-validator
  */
-export const zValidator = (schema: z.ZodSchema) => async (c: Context, next: Next) => {
+export const zValidator = (target: ValidationTarget, schema: z.ZodSchema) => async (c: Context, next: Next) => {
   try {
-    const body = await c.req.json();
-    const result = schema.safeParse(body);
+    let data: any;
+    
+    if (target === 'json') {
+      data = await c.req.json();
+    } else if (target === 'query') {
+      data = c.req.query();
+    }
+
+    const result = schema.safeParse(data);
     
     if (!result.success) {
       return c.json({
@@ -23,9 +32,17 @@ export const zValidator = (schema: z.ZodSchema) => async (c: Context, next: Next
     
     await next();
   } catch (error) {
+    if (target === 'json') {
+      return c.json({
+        success: false,
+        message: 'Invalid JSON body'
+      }, 400);
+    }
+    
     return c.json({
       success: false,
-      message: 'Invalid JSON body'
+      message: 'Validation error',
+      error: error instanceof Error ? error.message : String(error)
     }, 400);
   }
 };

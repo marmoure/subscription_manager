@@ -12,7 +12,7 @@ const publicRoutes = new Hono();
 publicRoutes.post(
   '/submit-license-request',
   rateLimiter,
-  zValidator(submitLicenseRequestSchema),
+  zValidator('json', submitLicenseRequestSchema),
   verifyCaptcha,
   async (c) => {
     try {

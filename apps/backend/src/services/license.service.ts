@@ -1,9 +1,76 @@
 import { db } from '../db/db';
 import { licenseKeys, userSubmissions, type LicenseKey, type UserSubmission, type NewUserSubmission } from '../db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { generateLicense } from '../utils/licenseKeyGenerator';
 
 export class LicenseService {
+  /**
+   * Gets all licenses with pagination and optional filtering.
+   * @param options Pagination and filtering options
+   * @returns List of licenses and pagination metadata
+   */
+  static async getAllLicenses(options: {
+    page: number;
+    limit: number;
+    status?: 'active' | 'inactive' | 'revoked';
+  }) {
+    const { page, limit, status } = options;
+    const offset = (page - 1) * limit;
+
+    try {
+      const whereClause = status ? eq(licenseKeys.status, status) : undefined;
+
+      // Count total matches for pagination
+      const [totalResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(licenseKeys)
+        .where(whereClause);
+
+      const total = totalResult?.count || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      // Fetch paginated results with joined submission data using select
+      const data = await db
+        .select({
+          id: licenseKeys.id,
+          licenseKey: licenseKeys.licenseKey,
+          machineId: licenseKeys.machineId,
+          status: licenseKeys.status,
+          createdAt: licenseKeys.createdAt,
+          updatedAt: licenseKeys.updatedAt,
+          expiresAt: licenseKeys.expiresAt,
+          submission: {
+            id: userSubmissions.id,
+            name: userSubmissions.name,
+            email: userSubmissions.email,
+            phone: userSubmissions.phone,
+            shopName: userSubmissions.shopName,
+            numberOfCashiers: userSubmissions.numberOfCashiers,
+            submissionDate: userSubmissions.submissionDate,
+          }
+        })
+        .from(licenseKeys)
+        .leftJoin(userSubmissions, eq(licenseKeys.id, userSubmissions.licenseKeyId))
+        .where(whereClause)
+        .limit(limit)
+        .offset(offset)
+        .orderBy(desc(licenseKeys.createdAt));
+
+      return {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      };
+    } catch (error) {
+      console.error(`Error in getAllLicenses: ${error}`);
+      throw new Error('Database query failed while fetching all licenses');
+    }
+  }
+
   /**
    * Generates a license key and stores it in the database.
    * Links it to the user submission.

@@ -13,3 +13,11 @@ export const verifyLicenseSchema = z.object({
 });
 
 export type VerifyLicenseInput = z.infer<typeof verifyLicenseSchema>;
+
+export const listLicensesQuerySchema = z.object({
+  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)).pipe(z.number().min(1)),
+  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 20)).pipe(z.number().min(1).max(100)),
+  status: z.enum(['active', 'inactive', 'revoked']).optional(),
+});
+
+export type ListLicensesQueryInput = z.infer<typeof listLicensesQuerySchema>;
