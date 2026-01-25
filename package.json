@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "description": "Monorepo for vibe subscription manager",
   "scripts": {
+    "postinstall": "node post-install.js",
     "setup:env": "node setup-env.js",
+    "setup:db": "pnpm --filter @vibe/backend db:push && pnpm --filter @vibe/backend db:seed",
     "dev": "concurrently \"pnpm --filter @vibe/backend dev\" \"pnpm --filter @vibe/frontend dev\"",
     "build": "pnpm --filter \"./apps/*\" build",
     "test": "pnpm --filter \"./apps/*\" test",
@@ -16,6 +18,7 @@
     "backend:db:migrate": "pnpm --filter @vibe/backend db:migrate",
     "backend:db:push": "pnpm --filter @vibe/backend db:push",
     "backend:db:studio": "pnpm --filter @vibe/backend db:studio",
+    "backend:db:seed": "pnpm --filter @vibe/backend db:seed",
     "backend:type-check": "pnpm --filter @vibe/backend type-check",
     "frontend:dev": "pnpm --filter @vibe/frontend dev",
     "frontend:build": "pnpm --filter @vibe/frontend build"

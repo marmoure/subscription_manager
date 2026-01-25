@@ -51,6 +51,12 @@ Thumbs.db
 *.swp
 *.swo
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+apps/backend/drizzle/
+
 # Sensitive files
 secrets/
 config/secrets.yml
