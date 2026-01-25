@@ -10,7 +10,7 @@ node_modules/
 .env.production
 
 # Build outputs
-/dist
+**/dist
 /build
 /.next
 .nuxt

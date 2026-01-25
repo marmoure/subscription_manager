@@ -1,7 +1,8 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { LicenseRequestFormValues } from '@/schemas/licenseRequest.schema';
+import { useAuthStore } from '../stores/authStore';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -15,18 +16,49 @@ export const apiClient = axios.create({
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
+// Request Interceptor
+apiClient.interceptors.request.use(
+  (config) => {
+    const { accessToken } = useAuthStore.getState();
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const { config } = error;
+    const config = error.config as InternalAxiosRequestConfig & { retryCount?: number; _retry?: boolean };
     
-    // Check if config exists and retryCount is below limit
-    if (!config || (config.retryCount || 0) >= MAX_RETRIES) {
+    if (!config) {
+      return Promise.reject(error);
+    }
+
+    // Handle 401 Unauthorized (Token Expiration)
+    if (error.response?.status === 401 && !config._retry) {
+      config._retry = true;
+      try {
+        await useAuthStore.getState().refreshAccessToken();
+        const { accessToken } = useAuthStore.getState();
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return apiClient(config);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Check if retryCount is below limit for other errors
+    if ((config.retryCount || 0) >= MAX_RETRIES) {
       return Promise.reject(error);
     }
     
     // Only retry on network errors or 5xx server errors (except 500 which might be application error, but 502/503/504 are usually retryable)
-    // Actually, let's retry on all network errors and 5xx.
     if (!error.response || (error.response.status >= 500 && error.response.status < 600)) {
        config.retryCount = (config.retryCount || 0) + 1;
        

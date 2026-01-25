@@ -4,11 +4,68 @@ import { adminUsers } from '../../db/schema';
 import { registerAdminSchema, loginAdminSchema, type RegisterAdminInput, type LoginAdminInput } from '../../schemas/admin.schema';
 import { zValidator } from '../../middleware/validator';
 import { hashPassword, verifyPassword } from '../../utils/password';
-import { generateAccessToken, generateRefreshToken } from '../../utils/jwt';
+import { verifyToken, generateAccessToken, generateRefreshToken } from '../../utils/jwt';
 import { rateLimiter } from '../../middleware/rateLimiter';
 import { sql, eq, or } from 'drizzle-orm';
 
 const authRoutes = new Hono();
+
+/**
+ * POST /api/admin/refresh-token
+ * Refresh access token using a valid refresh token
+ */
+authRoutes.post(
+  '/refresh-token',
+  async (c) => {
+    try {
+      const { refreshToken } = await c.req.json();
+
+      if (!refreshToken) {
+        return c.json({
+          success: false,
+          message: 'Refresh token is required'
+        }, 400);
+      }
+
+      // Verify refresh token
+      let payload;
+      try {
+        payload = verifyToken(refreshToken);
+      } catch (error) {
+        return c.json({
+          success: false,
+          message: 'Invalid or expired refresh token'
+        }, 401);
+      }
+
+      const newAccessToken = generateAccessToken({
+        adminId: payload.adminId,
+        username: payload.username,
+        email: payload.email
+      });
+
+      const newRefreshToken = generateRefreshToken({
+        adminId: payload.adminId,
+        username: payload.username,
+        email: payload.email
+      });
+
+      return c.json({
+        success: true,
+        data: {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken
+        }
+      });
+    } catch (error) {
+      console.error('Error in refresh token:', error);
+      return c.json({
+        success: false,
+        message: 'An error occurred during token refresh'
+      }, 500);
+    }
+  }
+);
 
 /**
  * POST /api/admin/login
