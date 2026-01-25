@@ -8,6 +8,34 @@
       "when": 1769297594364,
       "tag": "0000_20260125000000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1769343252424,
+      "tag": "0001_misty_hellfire_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1769343884096,
+      "tag": "0002_flashy_galactus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1769343902373,
+      "tag": "0003_awesome_proemial_gods",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1769343913849,
+      "tag": "0004_slimy_whizzer",
+      "breakpoints": true
     }
   ]
 }
