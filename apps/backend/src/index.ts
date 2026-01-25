@@ -1,5 +1,6 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { config } from './config/env.js'        
 import { validateApiKey } from './middleware/index.js'
 import publicRoutes from './routes/public.routes.js'
@@ -11,21 +12,19 @@ import adminDashboardRoutes from './routes/admin/dashboard.routes.js'
 
 export const app = new Hono()
 
+app.use('/api/*', cors())
+
 app.get('/', (c) => {
   return c.text('Hello World')
 })
 
-// Public routes
-app.route('/api/public', publicRoutes)
-
-// Admin routes
-app.route('/api/admin', adminAuthRoutes)
-app.route('/api/admin', adminLicenseRoutes)
-app.route('/api/admin', adminSubmissionRoutes)
-app.route('/api/admin', adminDashboardRoutes)
-
-// Software API routes (RPC)
-const routes = app.route('/api/v1', apiRoutes)
+const routes = app
+  .route('/api/public', publicRoutes)
+  .route('/api/admin', adminAuthRoutes)
+  .route('/api/admin', adminLicenseRoutes)
+  .route('/api/admin', adminSubmissionRoutes)
+  .route('/api/admin', adminDashboardRoutes)
+  .route('/api/v1', apiRoutes)
 
 export type AppType = typeof routes
 
