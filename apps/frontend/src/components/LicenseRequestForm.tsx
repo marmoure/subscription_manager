@@ -1,7 +1,6 @@
 import React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
 import ReCAPTCHA from "react-google-recaptcha"
 import {
   Form,
@@ -18,57 +17,31 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
-// Schema definition
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  machineId: z.string().min(1, {
-    message: "Machine ID is required.",
-  }),
-  phoneNumber: z.string().min(10, {
-    message: "Phone number must be at least 10 digits.",
-  }),
-  shopName: z.string().min(1, {
-    message: "Shop name is required.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  numberOfCashiers: z.coerce.number().min(1, {
-    message: "At least one cashier is required.",
-  }),
-  captcha: z.string().min(1, {
-    message: "Please verify you are not a robot.",
-  }),
-})
-
-type FormValues = z.infer<typeof formSchema>
+import { licenseRequestSchema, type LicenseRequestFormValues } from "@/schemas/licenseRequest.schema"
 
 export function LicenseRequestForm() {
   const recaptchaRef = React.useRef<ReCAPTCHA>(null)
 
   // 1. Define your form.
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<LicenseRequestFormValues>({
+    resolver: zodResolver(licenseRequestSchema),
     defaultValues: {
       name: "",
       machineId: "",
-      phoneNumber: "",
+      phone: "",
       shopName: "",
       email: "",
       numberOfCashiers: 1,
       captcha: "",
     },
+    mode: "onBlur",
   })
 
   // 2. Define a submit handler.
-  function onSubmit(values: FormValues) {
+  function onSubmit(values: LicenseRequestFormValues) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     console.log(values)
@@ -106,11 +79,15 @@ export function LicenseRequestForm() {
               <FormField
                 control={form.control}
                 name="name"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input 
+                        placeholder="John Doe" 
+                        {...field} 
+                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -120,11 +97,15 @@ export function LicenseRequestForm() {
               <FormField
                 control={form.control}
                 name="shopName"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem>
                     <FormLabel>Shop Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="My Awesome Shop" {...field} />
+                      <Input 
+                        placeholder="My Awesome Shop" 
+                        {...field} 
+                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -134,11 +115,16 @@ export function LicenseRequestForm() {
               <FormField
                 control={form.control}
                 name="email"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="john@example.com" type="email" {...field} />
+                      <Input 
+                        placeholder="john@example.com" 
+                        type="email" 
+                        {...field} 
+                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -147,12 +133,17 @@ export function LicenseRequestForm() {
 
               <FormField
                 control={form.control}
-                name="phoneNumber"
-                render={({ field }) => (
+                name="phone"
+                render={({ field, fieldState }) => (
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="+1234567890" type="tel" {...field} />
+                      <Input 
+                        placeholder="+1234567890" 
+                        type="tel" 
+                        {...field} 
+                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -162,11 +153,17 @@ export function LicenseRequestForm() {
               <FormField
                 control={form.control}
                 name="numberOfCashiers"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem>
                     <FormLabel>Number of Cashiers</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} {...field} />
+                      <Input 
+                        type="number" 
+                        min={1} 
+                        max={50}
+                        {...field} 
+                        className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -177,11 +174,15 @@ export function LicenseRequestForm() {
             <FormField
               control={form.control}
               name="machineId"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Machine ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="XXXX-XXXX-XXXX-XXXX" {...field} />
+                    <Input 
+                      placeholder="XXXX-XXXX-XXXX-XXXX" 
+                      {...field} 
+                      className={fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    />
                   </FormControl>
                   <FormDescription>
                     You can find the Machine ID in the system settings of your device.
