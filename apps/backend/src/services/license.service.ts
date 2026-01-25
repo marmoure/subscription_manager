@@ -1,5 +1,5 @@
 import { db } from '../db/db';
-import { licenseKeys, userSubmissions, type LicenseKey, type UserSubmission } from '../db/schema';
+import { licenseKeys, userSubmissions, type LicenseKey, type UserSubmission, type NewUserSubmission } from '../db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { generateLicense } from '../utils/licenseKeyGenerator';
 
@@ -71,6 +71,88 @@ export class LicenseService {
         throw error;
       }
       throw new Error('An unexpected error occurred during license generation and storage.');
+    }
+  }
+
+  /**
+   * Creates a user submission and generates a license in a single transaction.
+   * Checks for duplicate machine ID before proceeding.
+   * @param data Validated submission data
+   * @returns The generated license key
+   */
+  static async createLicenseWithTransaction(data: NewUserSubmission): Promise<LicenseKey> {
+    // 1. Check for duplicate machine ID
+    const existingLicense = await this.checkMachineIdExists(data.machineId);
+    if (existingLicense) {
+      const error = new Error('A license already exists for this machine ID');
+      (error as any).code = 'DUPLICATE_MACHINE_ID';
+      throw error;
+    }
+
+    try {
+      // Use synchronous transaction for better-sqlite3 consistency
+      return db.transaction((tx) => {
+        // 2. Store the user submission
+        const [newSubmission] = tx.insert(userSubmissions).values(data).returning().all();
+
+        if (!newSubmission) {
+          throw new Error('Failed to create user submission');
+        }
+
+        // 3. Generate the license
+        let serialKey: string = '';
+        let expiresDate: string | null = null;
+        let isUnique = false;
+        let attempts = 0;
+        const maxAttempts = 5;
+
+        while (!isUnique && attempts < maxAttempts) {
+          attempts++;
+          const licenseResult = generateLicense(
+            newSubmission.machineId,
+            newSubmission.shopName,
+            newSubmission.numberOfCashiers
+          );
+
+          serialKey = licenseResult.serialKey;
+          expiresDate = licenseResult.expiresDate;
+
+          const existing = tx.query.licenseKeys.findFirst({
+            where: eq(licenseKeys.licenseKey, serialKey),
+          });
+
+          if (!existing) {
+            isUnique = true;
+          }
+        }
+
+        if (!isUnique) {
+          throw new Error('Could not generate a unique license key after multiple attempts.');
+        }
+
+        // 4. Insert the new license key
+        const [insertedLicense] = tx.insert(licenseKeys).values({
+          licenseKey: serialKey,
+          machineId: newSubmission.machineId,
+          status: 'active',
+          expiresAt: expiresDate ? new Date(expiresDate) : null,
+        }).returning().all();
+
+        if (!insertedLicense) {
+          throw new Error('Failed to insert the license key into the database.');
+        }
+
+        // 5. Link the license to the user submission
+        tx.update(userSubmissions)
+          .set({ licenseKeyId: insertedLicense.id })
+          .where(eq(userSubmissions.id, newSubmission.id))
+          .run();
+
+        return insertedLicense;
+      });
+    } catch (error) {
+      console.error(`Error in createLicenseWithTransaction: ${error}`);
+      throw error;
     }
   }
 

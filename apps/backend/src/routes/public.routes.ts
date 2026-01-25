@@ -1,8 +1,6 @@
 import { Hono } from 'hono';
-import { db } from '../db/db';
-import { userSubmissions } from '../db/schema';
 import { LicenseService } from '../services/license.service';
-import { submitLicenseRequestSchema } from '../schemas/submission.schema';
+import { submitLicenseRequestSchema, type SubmitLicenseRequestInput } from '../schemas/submission.schema';
 import { rateLimiter, verifyCaptcha, zValidator } from '../middleware';
 
 const publicRoutes = new Hono();
@@ -18,11 +16,11 @@ publicRoutes.post(
   verifyCaptcha,
   async (c) => {
     try {
-      const validatedData = c.get('validated' as any);
+      const validatedData = (c as any).get('validated') as SubmitLicenseRequestInput;
       const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
 
-      // 1. Store the user submission
-      const [newSubmission] = await db.insert(userSubmissions).values({
+      // Use a single transaction to create submission and license
+      const license = await LicenseService.createLicenseWithTransaction({
         name: validatedData.name,
         machineId: validatedData.machineId,
         phone: validatedData.phone,
@@ -30,14 +28,7 @@ publicRoutes.post(
         email: validatedData.email,
         numberOfCashiers: validatedData.numberOfCashiers,
         ipAddress: ipAddress,
-      }).returning();
-
-      if (!newSubmission) {
-        throw new Error('Failed to create user submission');
-      }
-
-      // 2. Generate and store the license
-      const license = await LicenseService.generateAndStoreLicense(newSubmission);
+      });
 
       // 3. Return 201 Created with the license key
       return c.json({
@@ -49,14 +40,14 @@ publicRoutes.post(
         }
       }, 201);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing license request:', error);
       
-      if (error instanceof Error) {
+      if (error.code === 'DUPLICATE_MACHINE_ID') {
         return c.json({
           success: false,
-          message: error.message
-        }, 500);
+          message: 'A license already exists for this machine ID'
+        }, 409);
       }
 
       return c.json({

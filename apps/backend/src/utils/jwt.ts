@@ -13,7 +13,7 @@ export interface TokenPayload {
  * @returns A signed JWT string
  */
 export const generateAccessToken = (payload: TokenPayload, expiresIn: string = '1h'): string => {
-  return jwt.sign(payload, config.JWT_SECRET, { expiresIn });
+  return jwt.sign(payload, config.JWT_SECRET, { expiresIn: expiresIn as any });
 };
 
 /**
@@ -24,7 +24,7 @@ export const generateAccessToken = (payload: TokenPayload, expiresIn: string = '
  */
 export const generateRefreshToken = (payload: TokenPayload, expiresIn: string = '7d'): string => {
   // In a more robust implementation, you might use a different secret for refresh tokens
-  return jwt.sign(payload, config.JWT_SECRET, { expiresIn });
+  return jwt.sign(payload, config.JWT_SECRET, { expiresIn: expiresIn as any });
 };
 
 /**
