@@ -214,4 +214,52 @@ export class LicenseService {
       throw new Error('Database query failed while fetching licenses for machine ID');
     }
   }
+
+  /**
+   * Verifies a license by machine ID.
+   * @param machineId The machine ID to verify
+   * @returns The verification result
+   */
+  static async verifyLicense(machineId: string) {
+    try {
+      const license = await db.query.licenseKeys.findFirst({
+        where: and(
+          eq(licenseKeys.machineId, machineId),
+          eq(licenseKeys.status, 'active')
+        ),
+        with: {
+          submission: true,
+        },
+      });
+
+      if (!license) {
+        return {
+          valid: false,
+          message: 'No valid license found',
+        };
+      }
+
+      // Check if license is expired
+      if (license.expiresAt && license.expiresAt < new Date()) {
+        return {
+          valid: false,
+          message: 'License has expired',
+        };
+      }
+
+      return {
+        valid: true,
+        license: {
+          key: license.licenseKey,
+          status: license.status,
+          shopName: license.submission?.shopName || 'Unknown',
+          customerName: license.submission?.name || 'Unknown',
+        },
+        expiresAt: license.expiresAt,
+      };
+    } catch (error) {
+      console.error(`Error verifying license: ${error}`);
+      throw new Error('Verification failed due to a database error');
+    }
+  }
 }

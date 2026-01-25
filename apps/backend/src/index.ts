@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { config } from './config/env.js'        
 import { validateApiKey } from './middleware/index.js'
 import publicRoutes from './routes/public.routes.js'
+import apiRoutes from './routes/api.routes.js'
 
 export const app = new Hono()
 
@@ -12,6 +13,11 @@ app.get('/', (c) => {
 
 // Public routes
 app.route('/api/public', publicRoutes)
+
+// Software API routes (RPC)
+const routes = app.route('/api/v1', apiRoutes)
+
+export type AppType = typeof routes
 
 // Example of a route protected by API Key
 app.get('/api/v1/software/verify', validateApiKey, (c) => {
