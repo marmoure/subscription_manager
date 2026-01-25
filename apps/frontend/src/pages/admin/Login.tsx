@@ -17,10 +17,12 @@ import {
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { loginSchema, LoginFormValues } from '@/schemas/auth.schema';
-import { login, setTokens } from '@/services/auth';
+import { login as apiLogin } from '@/services/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +39,9 @@ const Login = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await login(values);
+      const response = await apiLogin(values);
       if (response.success) {
-        setTokens(response.data.accessToken, response.data.refreshToken);
+        login(response.data.accessToken, response.data.refreshToken, response.data.admin);
         navigate('/admin');
       } else {
          setError('Login failed. Please check your credentials.');

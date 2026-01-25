@@ -10,6 +10,7 @@ export interface AuthResponse {
       id: number;
       username: string;
       email: string;
+      role?: 'admin' | 'super-admin';
     };
   };
 }
@@ -31,18 +32,3 @@ export const refreshAccessToken = async (refreshToken: string): Promise<RefreshT
   const response = await apiClient.post<RefreshTokenResponse>('/api/admin/refresh-token', { refreshToken });
   return response.data;
 };
-
-export const setTokens = (accessToken: string, refreshToken: string) => {
-  localStorage.setItem('accessToken', accessToken);
-  localStorage.setItem('refreshToken', refreshToken);
-};
-
-export const clearTokens = () => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-};
-
-export const getAccessToken = () => localStorage.getItem('accessToken');
-export const getRefreshToken = () => localStorage.getItem('refreshToken');
-
-export const isAuthenticated = () => !!getAccessToken();

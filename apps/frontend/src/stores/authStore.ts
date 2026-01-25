@@ -22,6 +22,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  role?: 'admin' | 'super-admin';
 }
 
 interface AuthState {
