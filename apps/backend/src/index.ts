@@ -4,6 +4,7 @@ import { config } from './config/env.js'
 import { validateApiKey } from './middleware/index.js'
 import publicRoutes from './routes/public.routes.js'
 import apiRoutes from './routes/api.routes.js'
+import adminAuthRoutes from './routes/admin/auth.routes.js'
 
 export const app = new Hono()
 
@@ -13,6 +14,9 @@ app.get('/', (c) => {
 
 // Public routes
 app.route('/api/public', publicRoutes)
+
+// Admin routes
+app.route('/api/admin', adminAuthRoutes)
 
 // Software API routes (RPC)
 const routes = app.route('/api/v1', apiRoutes)
