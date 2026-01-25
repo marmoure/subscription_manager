@@ -57,28 +57,20 @@ function generateLicense(
 ): { serialKey: string; payload: any; expiresDate: string | null; issueDate: string } {
   // Check if private key exists
   if (!fs.existsSync(PRIVATE_KEY_PATH)) {
-    console.error('❌ Error: private_key.pem not found!');
-    console.error('\nPlease generate an RSA key pair first:');
-    console.error('  openssl genrsa -out private_key.pem 2048');
-    console.error('  openssl rsa -in private_key.pem -pubout -out public_key.pem');
-    console.error('\nThen update LICENSE_CONFIG.PUBLIC_KEY in src/lib/license.ts');
-    process.exit(1);
+    throw new Error('Private key not found for license generation. Please ensure private_key.pem exists in the utils directory.');
   }
 
   // Validate required fields
   if (!machineId || typeof machineId !== 'string' || machineId.trim().length === 0) {
-    console.error('❌ Error: machineID is required and must be a non-empty string');
-    process.exit(1);
+    throw new Error('machineID is required and must be a non-empty string');
   }
 
   if (!appName || typeof appName !== 'string' || appName.trim().length === 0) {
-    console.error('❌ Error: appName is required and must be a non-empty string');
-    process.exit(1);
+    throw new Error('appName is required and must be a non-empty string');
   }
 
   if (!maxUsers || typeof maxUsers !== 'number' || maxUsers < 1) {
-    console.error('❌ Error: maxUsers is required and must be a positive number');
-    process.exit(1);
+    throw new Error('maxUsers is required and must be a positive number');
   }
 
   // Read private key

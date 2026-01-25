@@ -36,6 +36,20 @@
       "when": 1769343913849,
       "tag": "0004_slimy_whizzer",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1769353187875,
+      "tag": "0005_abandoned_angel",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1769353217818,
+      "tag": "0006_blue_adam_warlock",
+      "breakpoints": true
     }
   ]
 }

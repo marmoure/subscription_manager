@@ -2,12 +2,16 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { config } from './config/env.js'        
 import { validateApiKey } from './middleware/index.js'
+import publicRoutes from './routes/public.routes.js'
 
-const app = new Hono()
+export const app = new Hono()
 
 app.get('/', (c) => {
   return c.text('Hello World')
 })
+
+// Public routes
+app.route('/api/public', publicRoutes)
 
 // Example of a route protected by API Key
 app.get('/api/v1/software/verify', validateApiKey, (c) => {

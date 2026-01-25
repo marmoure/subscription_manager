@@ -26,7 +26,7 @@ export class LicenseService {
           userData.shopName,
           userData.numberOfCashiers
         );
-        
+
         serialKey = licenseResult.serialKey;
         expiresDate = licenseResult.expiresDate;
 
@@ -44,23 +44,24 @@ export class LicenseService {
       }
 
       // Use a transaction to ensure both records are updated correctly
-      return await db.transaction(async (tx) => {
+      return db.transaction((tx) => {
         // 1. Insert the new license key into licenseKeys table
-        const [insertedLicense] = await tx.insert(licenseKeys).values({
+        const [insertedLicense] = tx.insert(licenseKeys).values({
           licenseKey: serialKey,
           machineId: userData.machineId,
           status: 'active',
           expiresAt: expiresDate ? new Date(expiresDate) : null,
-        }).returning();
+        }).returning().all();
 
         if (!insertedLicense) {
           throw new Error('Failed to insert the license key into the database.');
         }
 
         // 2. Link the license to the user submission via foreign key
-        await tx.update(userSubmissions)
+        tx.update(userSubmissions)
           .set({ licenseKeyId: insertedLicense.id })
-          .where(eq(userSubmissions.id, userData.id));
+          .where(eq(userSubmissions.id, userData.id))
+          .run();
 
         return insertedLicense;
       });
