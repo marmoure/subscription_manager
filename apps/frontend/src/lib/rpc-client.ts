@@ -1,16 +1,18 @@
 import { hc } from 'hono/client';
 import type { AppType } from '../../../backend/src/index';
 import { useAuthStore } from '../stores/authStore';
+import { handleApiResponse, NetworkError, logError } from '../utils/api-error-handler';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 /**
- * Custom fetch wrapper to support timeout and retry logic
+ * Custom fetch wrapper to support timeout and retry logic with exponential backoff
  */
 const fetchWithRetry = async (
   input: string | URL | Request,
   init?: RequestInit,
   retries = 3,
+  backoff = 1000,
   timeout = 10000
 ): Promise<Response> => {
   const controller = new AbortController();
@@ -24,28 +26,49 @@ const fetchWithRetry = async (
     
     clearTimeout(id);
     
-    // Retry on 5xx errors or network failures
+    // Retry on 5xx errors
     if (!response.ok && response.status >= 500 && retries > 0) {
-      console.warn(`Retrying request due to server error... (${retries} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return fetchWithRetry(input, init, retries - 1, timeout);
+      console.warn(`Server error (${response.status}). Retrying... (${retries} attempts left)`);
+      await new Promise(resolve => setTimeout(resolve, backoff));
+      return fetchWithRetry(input, init, retries - 1, backoff * 2, timeout);
     }
     
-    return response;
+    return await handleApiResponse(response);
   } catch (error: any) {
     clearTimeout(id);
     
+    // If it's already an ApiError (thrown by handleApiResponse), don't retry unless it's a 5xx
+    if (error.name === 'ApiError' || error.name === 'ValidationError' || error.name === 'AuthenticationError' || error.name === 'ForbiddenError' || error.name === 'NotFoundError') {
+       if (error.status < 500 && error.status !== 429) {
+         throw error;
+       }
+    }
+
     if (error.name === 'AbortError') {
-      throw new Error(`Request timed out after ${timeout}ms`);
+      if (retries > 0) {
+        console.warn(`Request timed out. Retrying... (${retries} attempts left)`);
+        await new Promise(resolve => setTimeout(resolve, backoff));
+        return fetchWithRetry(input, init, retries - 1, backoff * 2, timeout);
+      }
+      throw new NetworkError(`Request timed out after ${timeout}ms`);
+    }
+
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      if (retries > 0) {
+        console.warn(`Network error. Retrying... (${retries} attempts left)`);
+        await new Promise(resolve => setTimeout(resolve, backoff));
+        return fetchWithRetry(input, init, retries - 1, backoff * 2, timeout);
+      }
+      throw new NetworkError('Network error. Please check your internet connection.');
     }
     
     if (retries > 0) {
       console.warn(`Request failed: ${error.message}. Retrying... (${retries} attempts left)`);
-      // Exponential backoff could be added here
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return fetchWithRetry(input, init, retries - 1, timeout);
+      await new Promise(resolve => setTimeout(resolve, backoff));
+      return fetchWithRetry(input, init, retries - 1, backoff * 2, timeout);
     }
     
+    logError(error);
     throw error;
   }
 };
@@ -63,31 +86,32 @@ const authenticatedFetch = async (
 
   const newInit = { ...init, headers };
 
-  let response = await fetchWithRetry(input, newInit);
-
-  if (response.status === 401) {
-    // Avoid infinite loops if the refresh token endpoint itself returns 401
-    // We can check the URL or some other indicator
-    if (input.toString().includes('refresh-token') || input.toString().includes('login')) {
-       return response;
-    }
-
-    try {
-      await useAuthStore.getState().refreshAccessToken();
-      const newToken = useAuthStore.getState().accessToken;
-      
-      if (newToken) {
-        headers.set('Authorization', `Bearer ${newToken}`);
-        const retryInit = { ...newInit, headers };
-        return await fetchWithRetry(input, retryInit);
+  try {
+    return await fetchWithRetry(input, newInit);
+  } catch (error: any) {
+    if (error.status === 401) {
+      // Avoid infinite loops if the refresh token endpoint itself returns 401
+      const url = input.toString();
+      if (url.includes('refresh-token') || url.includes('login')) {
+         throw error;
       }
-    } catch (error) {
-      // Refresh failed, return original response
-      return response;
-    }
-  }
 
-  return response;
+      try {
+        await useAuthStore.getState().refreshAccessToken();
+        const newToken = useAuthStore.getState().accessToken;
+        
+        if (newToken) {
+          headers.set('Authorization', `Bearer ${newToken}`);
+          const retryInit = { ...newInit, headers };
+          return await fetchWithRetry(input, retryInit);
+        }
+      } catch (refreshError) {
+        // Refresh failed, throw original error
+        throw error;
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -101,8 +125,6 @@ try {
   });
 } catch (error) {
   console.error('Failed to initialize Hono RPC client:', error);
-  // Fallback or rethrow depending on how you want to handle it
-  // For now, we'll let it be initialized, but it might fail during calls
   clientInstance = hc<AppType>(API_URL);
 }
 

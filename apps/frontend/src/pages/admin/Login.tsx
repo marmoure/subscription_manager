@@ -19,10 +19,12 @@ import { ErrorMessage } from '@/components/ErrorMessage';
 import { loginSchema, LoginFormValues } from '@/schemas/auth.schema';
 import { login as apiLogin } from '@/services/auth';
 import { useAuth } from '@/hooks/useAuth';
+import { useApiError } from '@/hooks/useApiError';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { handleError } = useApiError();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,11 +49,17 @@ const Login = () => {
          setError('Login failed. Please check your credentials.');
       }
     } catch (err: any) {
-      console.error(err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError('An unexpected error occurred. Please try again.');
+      const handled = handleError(err);
+      setError(handled.message);
+      
+      // If we have validation errors from the backend, we can set them in the form
+      if (handled.fieldErrors) {
+        Object.entries(handled.fieldErrors).forEach(([field, messages]) => {
+          form.setError(field as any, {
+            type: 'manual',
+            message: messages[0],
+          });
+        });
       }
     } finally {
       setIsLoading(false);
