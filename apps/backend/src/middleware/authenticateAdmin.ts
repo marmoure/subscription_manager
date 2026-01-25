@@ -9,6 +9,7 @@ export type AdminVariables = {
     id: number;
     username: string;
     email: string;
+    role: 'admin' | 'super-admin';
   }
 };
 
@@ -38,6 +39,7 @@ export const authenticateAdmin = async (c: Context<{ Variables: AdminVariables }
       id: adminUsers.id,
       username: adminUsers.username,
       email: adminUsers.email,
+      role: adminUsers.role,
       isActive: adminUsers.isActive
     })
       .from(adminUsers)
@@ -62,7 +64,8 @@ export const authenticateAdmin = async (c: Context<{ Variables: AdminVariables }
     c.set('admin', {
       id: admin.id,
       username: admin.username,
-      email: admin.email
+      email: admin.email,
+      role: admin.role as 'admin' | 'super-admin'
     });
 
     await next();
@@ -85,3 +88,30 @@ export const authenticateAdmin = async (c: Context<{ Variables: AdminVariables }
     }, 401);
   }
 };
+
+/**
+ * Middleware to authorize requests based on admin roles.
+ * @param allowedRoles Array of roles that are allowed to access the route
+ */
+export const authorizeRole = (allowedRoles: ('admin' | 'super-admin')[]) => {
+  return async (c: Context<{ Variables: AdminVariables }>, next: Next) => {
+    const admin = c.get('admin');
+
+    if (!admin) {
+      return c.json({
+        success: false,
+        message: 'Unauthorized: Admin context not found'
+      }, 401);
+    }
+
+    if (!allowedRoles.includes(admin.role)) {
+      return c.json({
+        success: false,
+        message: 'Forbidden: You do not have permission to perform this action'
+      }, 403);
+    }
+
+    await next();
+  };
+};
+

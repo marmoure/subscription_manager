@@ -16,6 +16,7 @@ export const licenseKeys = sqliteTable('license_keys', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(new Date()).$onUpdate(() => new Date()),
   expiresAt: integer('expires_at', { mode: 'timestamp' }),
+  revokedAt: integer('revoked_at', { mode: 'timestamp' }),
 }, (table) => ({
   licenseKeyIdx: uniqueIndex('license_key_idx').on(table.licenseKey),
   machineIdIdx: index('machine_id_idx').on(table.machineId),
@@ -58,6 +59,7 @@ export const adminUsers = sqliteTable('admin_users', {
   username: text('username').unique().notNull(),
   hashedPassword: text('hashed_password').notNull(),
   email: text('email').unique().notNull(),
+  role: text('role', { enum: ['admin', 'super-admin'] }).notNull().default('admin'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
   lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),

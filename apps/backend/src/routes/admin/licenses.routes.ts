@@ -1,13 +1,15 @@
 import { Hono } from 'hono';
-import { authenticateAdmin, type AdminVariables } from '../../middleware/authenticateAdmin';
+import { authenticateAdmin, authorizeRole, type AdminVariables } from '../../middleware/authenticateAdmin';
 import { zValidator } from '../../middleware/validator';
 import { 
   listLicensesQuerySchema, 
   getLicenseByIdSchema, 
   updateLicenseStatusSchema,
+  revokeLicenseSchema,
   type ListLicensesQueryInput, 
   type GetLicenseByIdInput,
-  type UpdateLicenseStatusInput
+  type UpdateLicenseStatusInput,
+  type RevokeLicenseInput
 } from '../../schemas/license.schema';
 import { LicenseService } from '../../services/license.service';
 
@@ -120,6 +122,57 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
         return c.json({
           success: false,
           message: 'Internal server error while updating license status'
+        }, 500);
+      }
+    }
+  )
+  /**
+   * DELETE /api/admin/licenses/:id
+   * Revokes a license key permanently.
+   * Requires admin or super-admin role.
+   */
+  .delete(
+    '/licenses/:id',
+    authenticateAdmin,
+    authorizeRole(['admin', 'super-admin']),
+    zValidator('param', getLicenseByIdSchema),
+    zValidator('json', revokeLicenseSchema),
+    async (c) => {
+      const { id } = (c as any).get('validated') as GetLicenseByIdInput;
+      const { reason } = (c as any).get('validated') as RevokeLicenseInput;
+      const admin = c.get('admin');
+
+      try {
+        const revokedLicense = await LicenseService.revokeLicense(
+          id,
+          admin.id,
+          reason
+        );
+
+        if (!revokedLicense) {
+          return c.json({
+            success: false,
+            message: 'License not found'
+          }, 404);
+        }
+
+        return c.json({
+          success: true,
+          message: 'License has been permanently revoked',
+          data: revokedLicense
+        }, 200);
+      } catch (error: any) {
+        if (error.status === 400) {
+          return c.json({
+            success: false,
+            message: error.message
+          }, 400);
+        }
+        
+        console.error(`Error in revoke license route: ${error}`);
+        return c.json({
+          success: false,
+          message: 'Internal server error while revoking license'
         }, 500);
       }
     }

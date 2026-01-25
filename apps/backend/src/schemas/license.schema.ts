@@ -34,3 +34,9 @@ export const updateLicenseStatusSchema = z.object({
 });
 
 export type UpdateLicenseStatusInput = z.infer<typeof updateLicenseStatusSchema>;
+
+export const revokeLicenseSchema = z.object({
+  reason: z.string().optional().describe('Reason for revocation'),
+});
+
+export type RevokeLicenseInput = z.infer<typeof revokeLicenseSchema>;

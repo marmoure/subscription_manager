@@ -78,6 +78,7 @@ export class LicenseService {
           createdAt: licenseKeys.createdAt,
           updatedAt: licenseKeys.updatedAt,
           expiresAt: licenseKeys.expiresAt,
+          revokedAt: licenseKeys.revokedAt,
           submission: {
             id: userSubmissions.id,
             name: userSubmissions.name,
@@ -107,6 +108,70 @@ export class LicenseService {
     } catch (error) {
       console.error(`Error in getAllLicenses: ${error}`);
       throw new Error('Database query failed while fetching all licenses');
+    }
+  }
+
+  /**
+   * Revokes a license key permanently.
+   * @param id License ID
+   * @param adminId Admin user ID performing the action
+   * @param reason Optional reason for revocation
+   * @returns The revoked license or null if not found
+   */
+  static async revokeLicense(
+    id: number,
+    adminId: number,
+    reason?: string
+  ): Promise<LicenseKey | null> {
+    try {
+      const license = await db.query.licenseKeys.findFirst({
+        where: eq(licenseKeys.id, id),
+      });
+
+      if (!license) {
+        return null;
+      }
+
+      if (license.status === 'revoked') {
+        const error = new Error('License is already revoked');
+        (error as any).status = 400;
+        throw error;
+      }
+
+      const oldStatus = license.status;
+
+      return db.transaction((tx) => {
+        const [updatedLicense] = tx.update(licenseKeys)
+          .set({ 
+            status: 'revoked',
+            revokedAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(licenseKeys.id, id))
+          .returning()
+          .all();
+
+        if (!updatedLicense) {
+          throw new Error('Failed to revoke license');
+        }
+
+        tx.insert(licenseStatusLogs).values({
+          licenseKeyId: id,
+          oldStatus: oldStatus as 'active' | 'inactive' | 'revoked',
+          newStatus: 'revoked',
+          adminId,
+          reason: reason || 'Permanent revocation',
+          timestamp: new Date(),
+        }).run();
+
+        // TODO: Clear license from cache if a caching layer is implemented
+        // TODO: Send notification email to license holder if an email service is available
+
+        return updatedLicense;
+      });
+    } catch (error) {
+      console.error(`Error in revokeLicense: ${error}`);
+      throw error;
     }
   }
 
@@ -426,11 +491,18 @@ export class LicenseService {
       // Update in a transaction
       return db.transaction((tx) => {
         // 1. Update the license status
+        const updateData: any = { 
+          status,
+          updatedAt: new Date()
+        };
+
+        // If revoking, also set revokedAt
+        if (status === 'revoked') {
+          updateData.revokedAt = new Date();
+        }
+
         const [updatedLicense] = tx.update(licenseKeys)
-          .set({ 
-            status,
-            updatedAt: new Date()
-          })
+          .set(updateData)
           .where(eq(licenseKeys.id, id))
           .returning()
           .all();
