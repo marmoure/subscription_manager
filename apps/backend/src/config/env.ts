@@ -37,7 +37,7 @@ const envSchema = z.object({
 
   // SMTP Configuration (for sending emails)
   SMTP_HOST: z.string().min(1, 'SMTP_HOST is required'),
-  
+
   SMTP_PORT: z
     .string()
     .default('587')
@@ -58,7 +58,7 @@ const envSchema = z.object({
 
   // CAPTCHA Configuration (Google reCAPTCHA)
   RECAPTCHA_SITE_KEY: z.string().min(1, 'RECAPTCHA_SITE_KEY is required'),
-  
+
   RECAPTCHA_SECRET_KEY: z.string().min(1, 'RECAPTCHA_SECRET_KEY is required'),
 });
 
@@ -72,7 +72,7 @@ function validateEnv() {
     return parsed;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map((err) => {
+      const errorMessages = error.issues.map((err) => {
         const path = err.path.join('.');
         return `  ❌ ${path}: ${err.message}`;
       });
@@ -80,7 +80,7 @@ function validateEnv() {
       console.error('\n🚨 Environment variable validation failed:\n');
       console.error(errorMessages.join('\n'));
       console.error('\n💡 Please check your .env file and ensure all required variables are set correctly.\n');
-      
+
       throw new Error('Invalid environment variables');
     }
     throw error;

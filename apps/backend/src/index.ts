@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import { config } from './config/env.js'
+import { config } from './config/env.js'        
+import { validateApiKey } from './middleware/index.js'
 
 const app = new Hono()
 
@@ -8,7 +9,17 @@ app.get('/', (c) => {
   return c.text('Hello World')
 })
 
+// Example of a route protected by API Key
+app.get('/api/v1/software/verify', validateApiKey, (c) => {
+  return c.json({
+    success: true,
+    message: 'API Key is valid',
+    timestamp: new Date().toISOString()
+  });
+})
+
 const port = config.PORT
+
 console.log(`Server is running on port ${port}`)
 
 serve({

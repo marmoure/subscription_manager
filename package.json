@@ -14,6 +14,7 @@
     "backend:start": "pnpm --filter @vibe/backend start",
     "backend:db:generate": "pnpm --filter @vibe/backend db:generate",
     "backend:db:migrate": "pnpm --filter @vibe/backend db:migrate",
+    "backend:db:push": "pnpm --filter @vibe/backend db:push",
     "backend:db:studio": "pnpm --filter @vibe/backend db:studio",
     "backend:type-check": "pnpm --filter @vibe/backend type-check",
     "frontend:dev": "pnpm --filter @vibe/frontend dev",
