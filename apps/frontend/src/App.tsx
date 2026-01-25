@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
+import Licenses from './pages/admin/Licenses';
 import Login from './pages/admin/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -24,6 +25,14 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/licenses" 
+          element={
+            <ProtectedRoute>
+              <Licenses />
             </ProtectedRoute>
           } 
         />
