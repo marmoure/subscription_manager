@@ -1,15 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   FileText,
-  Search,
   RotateCcw,
   Eye,
   AlertCircle,
   ExternalLink,
-  Calendar,
-  User,
-  Hash
+  CreditCard
 } from 'lucide-react';
 import {
   Table,
@@ -21,12 +18,12 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { Pagination } from '@/components/Pagination';
+import { FilterPanel, type FilterValues } from '@/components/FilterPanel';
 import { getSubmissions, type SubmissionDataItem } from '@/services/admin';
 
 const Submissions: React.FC = () => {
@@ -42,25 +39,39 @@ const Submissions: React.FC = () => {
   const [pageSize, setPageSize] = useState(initialLimit);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  const [filters, setFilters] = useState<FilterValues>({
+    search: searchParams.get('q') || '',
+    startDate: searchParams.get('startDate') || '',
+    endDate: searchParams.get('endDate') || '',
+    minCashiers: searchParams.get('minCashiers') || '',
+    maxCashiers: searchParams.get('maxCashiers') || '',
+  });
+
+  const [debouncedFilters, setDebouncedFilters] = useState<FilterValues>(filters);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      if (searchTerm !== (searchParams.get('q') || '')) {
-        setPage(1);
-      }
+      setDebouncedFilters(filters);
+      setPage(1);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, searchParams]);
+  }, [filters]);
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getSubmissions(page, pageSize, debouncedSearchTerm || undefined);
+      const response = await getSubmissions(
+        page, 
+        pageSize, 
+        debouncedFilters.search || undefined,
+        debouncedFilters.startDate || undefined,
+        debouncedFilters.endDate || undefined,
+        debouncedFilters.minCashiers ? parseInt(debouncedFilters.minCashiers) : undefined,
+        debouncedFilters.maxCashiers ? parseInt(debouncedFilters.maxCashiers) : undefined
+      );
       if (response.success) {
         setSubmissions(response.data);
         setTotalPages(response.pagination.totalPages);
@@ -73,17 +84,21 @@ const Submissions: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, debouncedSearchTerm]);
+  }, [page, pageSize, debouncedFilters]);
 
   useEffect(() => {
     fetchSubmissions();
     
     const params: any = { page: page.toString() };
     if (pageSize !== 20) params.limit = pageSize.toString();
-    if (searchTerm) params.q = searchTerm;
+    if (filters.search) params.q = filters.search;
+    if (filters.startDate) params.startDate = filters.startDate;
+    if (filters.endDate) params.endDate = filters.endDate;
+    if (filters.minCashiers) params.minCashiers = filters.minCashiers;
+    if (filters.maxCashiers) params.maxCashiers = filters.maxCashiers;
     
     setSearchParams(params, { replace: true });
-  }, [page, pageSize, debouncedSearchTerm, searchTerm, fetchSubmissions, setSearchParams]);
+  }, [page, pageSize, debouncedFilters, fetchSubmissions, setSearchParams]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -92,6 +107,20 @@ const Submissions: React.FC = () => {
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     setPage(1);
+  };
+
+  const handleFilterChange = (newFilters: Partial<FilterValues>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      startDate: '',
+      endDate: '',
+      minCashiers: '',
+      maxCashiers: '',
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -104,8 +133,18 @@ const Submissions: React.FC = () => {
     }).format(new Date(dateString));
   };
 
+  const formatPhoneNumber = (phone: string) => {
+    // Simple formatting for demonstration, can be improved based on requirements
+    const cleaned = ('' + phone).replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      return '(' + match[1] + ') ' + match[2] + '-' + match[3];
+    }
+    return phone;
+  };
+
   const getStatusBadge = (status: string | undefined) => {
-    if (!status) return <Badge variant="outline">No License</Badge>;
+    if (!status) return <Badge variant="outline" className="opacity-50">Pending</Badge>;
     
     switch (status) {
       case 'active':
@@ -119,13 +158,33 @@ const Submissions: React.FC = () => {
     }
   };
 
+  const showLicenseDetails = (submission: SubmissionDataItem) => {
+    if (!submission.licenseKey) {
+      alert('No license has been issued for this submission yet.');
+      return;
+    }
+    
+    alert(
+      `LICENSE DETAILS\n` +
+      `------------------\n` +
+      `Key: ${submission.licenseKey.licenseKey}\n` +
+      `Status: ${submission.licenseKey.status.toUpperCase()}\n` +
+      `Expires: ${submission.licenseKey.expiresAt ? formatDate(submission.licenseKey.expiresAt) : 'Never'}\n\n` +
+      `USER DETAILS\n` +
+      `------------------\n` +
+      `Name: ${submission.name}\n` +
+      `Shop: ${submission.shopName}\n` +
+      `Machine ID: ${submission.machineId}`
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Submissions</h1>
-            <p className="text-muted-foreground">Review user requests for license keys.</p>
+            <p className="text-muted-foreground">Review and manage all license requests from users.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => fetchSubmissions()}>
@@ -136,18 +195,12 @@ const Submissions: React.FC = () => {
         </div>
 
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row gap-4 items-end md:items-center justify-between">
-              <div className="relative w-full md:w-96">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, email or shop..."
-                  className="pl-9"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+          <CardHeader className="pb-4">
+            <FilterPanel 
+              filters={filters} 
+              onFilterChange={handleFilterChange} 
+              onClearAll={handleClearFilters} 
+            />
           </CardHeader>
           <CardContent>
             {error && (
@@ -162,11 +215,12 @@ const Submissions: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User / Shop</TableHead>
-                    <TableHead className="hidden md:table-cell">Contact</TableHead>
-                    <TableHead className="hidden lg:table-cell">Cashiers</TableHead>
-                    <TableHead>Submission Date</TableHead>
-                    <TableHead>License Status</TableHead>
+                    <TableHead className="min-w-[150px]">User / Shop</TableHead>
+                    <TableHead className="hidden md:table-cell">Contact Info</TableHead>
+                    <TableHead className="hidden lg:table-cell">Machine ID</TableHead>
+                    <TableHead className="hidden xl:table-cell text-center">Cashiers</TableHead>
+                    <TableHead className="min-w-[120px]">Submitted On</TableHead>
+                    <TableHead>License</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -178,56 +232,86 @@ const Submissions: React.FC = () => {
                           <Skeleton className="h-4 w-24 mb-1" />
                           <Skeleton className="h-3 w-32" />
                         </TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-12" /></TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Skeleton className="h-4 w-32 mb-1" />
+                          <Skeleton className="h-3 w-24" />
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell className="hidden xl:table-cell"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                       </TableRow>
                     ))
                   ) : submissions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center">
+                      <TableCell colSpan={7} className="h-32 text-center">
                         <div className="flex flex-col items-center justify-center text-muted-foreground">
                           <FileText className="h-8 w-8 mb-2 opacity-20" />
-                          <p>No submissions found.</p>
+                          <p>No submissions found matching your criteria.</p>
                         </div>
                       </TableCell>
                     </TableRow>
                   ) : (
                     submissions.map((submission) => (
-                      <TableRow key={submission.id}>
+                      <TableRow 
+                        key={submission.id} 
+                        className="cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/50"
+                        onClick={() => showLicenseDetails(submission)}
+                      >
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium text-sm">{submission.name}</span>
-                            <span className="text-xs text-muted-foreground">{submission.shopName}</span>
+                            <span className="text-xs text-muted-foreground line-clamp-1">{submission.shopName}</span>
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className="flex flex-col">
-                            <span className="text-xs">{submission.email}</span>
-                            <span className="text-[10px] text-muted-foreground">{submission.phone}</span>
+                            <span className="text-xs font-medium">{submission.email}</span>
+                            <span className="text-[10px] text-muted-foreground">{formatPhoneNumber(submission.phone)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden lg:table-cell text-sm">
+                        <TableCell className="hidden lg:table-cell">
+                          <code className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                            {submission.machineId}
+                          </code>
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell text-center text-sm">
                           {submission.numberOfCashiers}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {formatDate(submission.submissionDate)}
                         </TableCell>
                         <TableCell>
-                          {getStatusBadge(submission.licenseKey?.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(submission.licenseKey?.status)}
+                            {submission.licenseKey && (
+                              <CreditCard className="h-3 w-3 text-muted-foreground" />
+                            )}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex justify-end gap-2">
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               title="View Details"
-                              onClick={() => alert(`Name: ${submission.name}\nEmail: ${submission.email}\nShop: ${submission.shopName}\nMachine ID: ${submission.machineId}`)}
+                              onClick={() => showLicenseDetails(submission)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
+                            {submission.licenseKey && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                title="Go to License"
+                                asChild
+                              >
+                                <a href={`/admin/licenses?q=${submission.licenseKey.licenseKey}`}>
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

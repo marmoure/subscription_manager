@@ -83,14 +83,20 @@ export const getLicenses = async (
 export const getSubmissions = async (
   page: number = 1,
   limit: number = 20,
-  search?: string
+  search?: string,
+  startDate?: string,
+  endDate?: string,
+  minCashiers?: number,
+  maxCashiers?: number
 ): Promise<SubmissionListResponse> => {
   const params = new URLSearchParams();
   params.append('page', page.toString());
   params.append('limit', limit.toString());
-  if (search) {
-    params.append('search', search);
-  }
+  if (search) params.append('search', search);
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  if (minCashiers !== undefined) params.append('minCashiers', minCashiers.toString());
+  if (maxCashiers !== undefined) params.append('maxCashiers', maxCashiers.toString());
 
   const response = await apiClient.get<SubmissionListResponse>(`/api/admin/submissions?${params.toString()}`);
   return response.data;
