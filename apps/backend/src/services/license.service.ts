@@ -17,8 +17,20 @@ export class LicenseService {
           submission: true,
           verificationLogs: {
             orderBy: [desc(verificationLogs.timestamp)],
-            limit: 50, // Get last 50 logs for history
+            limit: 50,
           },
+          statusLogs: {
+            with: {
+              admin: {
+                columns: {
+                  id: true,
+                  username: true,
+                  email: true,
+                }
+              }
+            },
+            orderBy: [desc(licenseStatusLogs.timestamp)],
+          }
         },
       });
 

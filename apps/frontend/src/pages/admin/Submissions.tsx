@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   FileText,
   RotateCcw,
@@ -28,6 +28,7 @@ import { getSubmissions, type SubmissionDataItem } from '@/services/admin';
 
 const Submissions: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<SubmissionDataItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,23 +160,11 @@ const Submissions: React.FC = () => {
   };
 
   const showLicenseDetails = (submission: SubmissionDataItem) => {
-    if (!submission.licenseKey) {
+    if (submission.licenseKey) {
+      navigate(`/admin/licenses/${submission.licenseKey.id}`);
+    } else {
       alert('No license has been issued for this submission yet.');
-      return;
     }
-    
-    alert(
-      `LICENSE DETAILS\n` +
-      `------------------\n` +
-      `Key: ${submission.licenseKey.licenseKey}\n` +
-      `Status: ${submission.licenseKey.status.toUpperCase()}\n` +
-      `Expires: ${submission.licenseKey.expiresAt ? formatDate(submission.licenseKey.expiresAt) : 'Never'}\n\n` +
-      `USER DETAILS\n` +
-      `------------------\n` +
-      `Name: ${submission.name}\n` +
-      `Shop: ${submission.shopName}\n` +
-      `Machine ID: ${submission.machineId}`
-    );
   };
 
   return (
@@ -307,9 +296,9 @@ const Submissions: React.FC = () => {
                                 title="Go to License"
                                 asChild
                               >
-                                <a href={`/admin/licenses?q=${submission.licenseKey.licenseKey}`}>
+                                <Link to={`/admin/licenses/${submission.licenseKey.id}`}>
                                   <ExternalLink className="h-4 w-4" />
-                                </a>
+                                </Link>
                               </Button>
                             )}
                           </div>

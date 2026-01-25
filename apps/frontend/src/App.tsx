@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
 import Licenses from './pages/admin/Licenses';
+import LicenseDetail from './pages/admin/LicenseDetail';
 import Submissions from './pages/admin/Submissions';
 import Login from './pages/admin/Login';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -34,6 +35,14 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <Licenses />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/licenses/:id" 
+          element={
+            <ProtectedRoute>
+              <LicenseDetail />
             </ProtectedRoute>
           } 
         />

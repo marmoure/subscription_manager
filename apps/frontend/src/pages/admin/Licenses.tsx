@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   CreditCard,
   Search,
@@ -31,6 +31,7 @@ import { getLicenses, updateLicenseStatus, revokeLicense, type LicenseDataItem }
 
 const Licenses: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [licenses, setLicenses] = useState<LicenseDataItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -275,7 +276,7 @@ const Licenses: React.FC = () => {
                               variant="ghost" 
                               size="icon" 
                               title="View Details"
-                              onClick={() => alert(`License Key: ${license.licenseKey}\nMachine ID: ${license.machineId}\nShop: ${license.submission?.shopName}`)}
+                              onClick={() => navigate(`/admin/licenses/${license.id}`)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>

@@ -58,6 +58,28 @@ export interface LicenseDataItem {
     numberOfCashiers: number;
     submissionDate: string;
   } | null;
+  verificationLogs?: Array<{
+    id: number;
+    timestamp: string;
+    status: 'success' | 'failed';
+    message: string;
+    ipAddress: string | null;
+  }>;
+  statusLogs?: Array<{
+    id: number;
+    oldStatus: string | null;
+    newStatus: string;
+    reason: string | null;
+    timestamp: string;
+    admin: {
+      username: string;
+      email: string;
+    } | null;
+  }>;
+  metadata?: {
+    verificationAttempts: number;
+    lastVerification: string | null;
+  };
 }
 
 export const getLicenses = async (
@@ -77,6 +99,11 @@ export const getLicenses = async (
   }
 
   const response = await apiClient.get<LicenseListResponse>(`/api/admin/licenses?${params.toString()}`);
+  return response.data;
+};
+
+export const getLicenseDetails = async (id: number): Promise<{ success: boolean; data: LicenseDataItem; message?: string }> => {
+  const response = await apiClient.get<{ success: boolean; data: LicenseDataItem; message?: string }>(`/api/admin/licenses/${id}`);
   return response.data;
 };
 
