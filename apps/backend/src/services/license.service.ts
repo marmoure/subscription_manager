@@ -1,8 +1,78 @@
 import { db } from '../db/db';
-import { licenseKeys, type LicenseKey } from '../db/schema';
+import { licenseKeys, userSubmissions, type LicenseKey, type UserSubmission } from '../db/schema';
 import { eq, desc, and } from 'drizzle-orm';
+import { generateLicense } from '../utils/licenseKeyGenerator';
 
 export class LicenseService {
+  /**
+   * Generates a license key and stores it in the database.
+   * Links it to the user submission.
+   * @param userData The user submission data
+   * @returns The created license key record
+   */
+  static async generateAndStoreLicense(userData: UserSubmission): Promise<LicenseKey> {
+    try {
+      let serialKey: string = '';
+      let expiresDate: string | null = null;
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      // Handle collision by regenerating if necessary
+      while (!isUnique && attempts < maxAttempts) {
+        attempts++;
+        const licenseResult = generateLicense(
+          userData.machineId,
+          userData.shopName,
+          userData.numberOfCashiers
+        );
+        
+        serialKey = licenseResult.serialKey;
+        expiresDate = licenseResult.expiresDate;
+
+        const existing = await db.query.licenseKeys.findFirst({
+          where: eq(licenseKeys.licenseKey, serialKey),
+        });
+
+        if (!existing) {
+          isUnique = true;
+        }
+      }
+
+      if (!isUnique) {
+        throw new Error('Could not generate a unique license key after multiple attempts due to collisions.');
+      }
+
+      // Use a transaction to ensure both records are updated correctly
+      return await db.transaction(async (tx) => {
+        // 1. Insert the new license key into licenseKeys table
+        const [insertedLicense] = await tx.insert(licenseKeys).values({
+          licenseKey: serialKey,
+          machineId: userData.machineId,
+          status: 'active',
+          expiresAt: expiresDate ? new Date(expiresDate) : null,
+        }).returning();
+
+        if (!insertedLicense) {
+          throw new Error('Failed to insert the license key into the database.');
+        }
+
+        // 2. Link the license to the user submission via foreign key
+        await tx.update(userSubmissions)
+          .set({ licenseKeyId: insertedLicense.id })
+          .where(eq(userSubmissions.id, userData.id));
+
+        return insertedLicense;
+      });
+    } catch (error) {
+      console.error(`Error in generateAndStoreLicense: ${error}`);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('An unexpected error occurred during license generation and storage.');
+    }
+  }
+
   /**
    * Checks if a license already exists for the given machine ID.
    * Prioritizes 'active' licenses if multiple exist.
