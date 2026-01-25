@@ -9,7 +9,11 @@ import {
   RotateCcw,
   Trash2,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  CheckCircle,
+  ShieldAlert,
+  XCircle
 } from 'lucide-react';
 import {
   Table,
@@ -25,8 +29,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { Pagination } from '@/components/Pagination';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { getLicenses, updateLicenseStatus, revokeLicense, type LicenseDataItem } from '@/services/admin';
 
 const Licenses: React.FC = () => {
@@ -47,6 +60,13 @@ const Licenses: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  // Status change states
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ id: number; status: 'active' | 'inactive' | 'revoked' } | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [previousState, setPreviousState] = useState<{ id: number; status: 'active' | 'inactive' } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -97,34 +117,65 @@ const Licenses: React.FC = () => {
     setPage(1); // Reset to first page when changing page size
   };
 
-  const handleStatusChange = async (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return;
+  const openStatusConfirm = (id: number, status: 'active' | 'inactive' | 'revoked') => {
+    setPendingAction({ id, status });
+    setIsConfirmOpen(true);
+  };
 
+  const handleStatusUpdate = async (reason: string) => {
+    if (!pendingAction) return;
+    
+    const license = licenses.find(l => l.id === pendingAction.id);
+    const oldStatus = license?.status as 'active' | 'inactive';
+    
+    setIsUpdating(true);
     try {
-      const response = await updateLicenseStatus(id, newStatus);
-      if (response.success) {
-        fetchLicenses();
+      let response;
+      if (pendingAction.status === 'revoked') {
+        response = await revokeLicense(pendingAction.id, reason);
+        setPreviousState(null);
       } else {
-        alert(response.message || 'Failed to update status');
+        response = await updateLicenseStatus(pendingAction.id, pendingAction.status, reason);
+        setPreviousState({ id: pendingAction.id, status: oldStatus });
+      }
+
+      if (response.success) {
+        setSuccessMessage(`License successfully ${pendingAction.status === 'revoked' ? 'revoked' : 'updated'}`);
+        setIsConfirmOpen(false);
+        fetchLicenses();
+        setTimeout(() => {
+          setSuccessMessage(null);
+          setPreviousState(null);
+        }, 10000);
+      } else {
+        setError(response.message || 'Failed to update status');
       }
     } catch (err: any) {
-      alert(err.message || 'Error updating status');
+      setError(err.message || 'Error updating status');
+    } finally {
+      setIsUpdating(false);
+      setPendingAction(null);
     }
   };
 
-  const handleRevoke = async (id: number) => {
-    if (!confirm('Are you sure you want to PERMANENTLY revoke this license? This action cannot be undone.')) return;
-
+  const handleUndo = async () => {
+    if (!previousState) return;
+    
+    setIsUpdating(true);
     try {
-      const response = await revokeLicense(id, 'Admin manual revocation');
+      const response = await updateLicenseStatus(previousState.id, previousState.status, 'Undo previous status change');
       if (response.success) {
+        setSuccessMessage('Action undone successfully');
+        setPreviousState(null);
         fetchLicenses();
+        setTimeout(() => setSuccessMessage(null), 5000);
       } else {
-        alert(response.message || 'Failed to revoke license');
+        setError(response.message || 'Failed to undo action');
       }
     } catch (err: any) {
-      alert(err.message || 'Error revoking license');
+      setError(err.message || 'Error undoing action');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -151,6 +202,33 @@ const Licenses: React.FC = () => {
     }
   };
 
+  const getConfirmDialogDetails = () => {
+    if (!pendingAction) return { title: '', description: '', destructive: false };
+    
+    if (pendingAction.status === 'active') {
+      return {
+        title: 'Activate License',
+        description: 'This will enable the license key. The user will be able to use the software.',
+        destructive: false
+      };
+    } else if (pendingAction.status === 'inactive') {
+      return {
+        title: 'Deactivate License',
+        description: 'This will temporarily disable the license key. Future verification attempts will fail.',
+        destructive: true
+      };
+    } else if (pendingAction.status === 'revoked') {
+      return {
+        title: 'REVOKE LICENSE PERMANENTLY',
+        description: 'WARNING: This action CANNOT be undone. The license will be permanently disabled.',
+        destructive: true
+      };
+    }
+    return { title: '', description: '', destructive: false };
+  };
+
+  const { title, description, destructive } = getConfirmDialogDetails();
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -160,12 +238,35 @@ const Licenses: React.FC = () => {
             <p className="text-muted-foreground">Manage and monitor all generated license keys.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => fetchLicenses()}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={() => fetchLicenses()} disabled={loading}>
+              <RotateCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
         </div>
+
+        {successMessage && (
+          <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-900/50 dark:text-green-400 flex items-center justify-between">
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              <div>
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>{successMessage}</AlertDescription>
+              </div>
+            </div>
+            {previousState && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleUndo}
+                disabled={isUpdating}
+                className="ml-4 bg-white dark:bg-slate-950"
+              >
+                Undo
+              </Button>
+            )}
+          </Alert>
+        )}
 
         <Card>
           <CardHeader className="pb-3">
@@ -219,7 +320,7 @@ const Licenses: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? (
+                  {loading && licenses.length === 0 ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
@@ -282,26 +383,41 @@ const Licenses: React.FC = () => {
                             </Button>
                             
                             {license.status !== 'revoked' && (
-                              <>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                                  title={license.status === 'active' ? 'Deactivate' : 'Activate'}
-                                  onClick={() => handleStatusChange(license.id, license.status)}
-                                >
-                                  <RotateCcw className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  title="Revoke Permanently"
-                                  onClick={() => handleRevoke(license.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" disabled={isUpdating}>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    disabled={license.status === 'active'}
+                                    onClick={() => openStatusConfirm(license.id, 'active')}
+                                    className="text-green-600 focus:text-green-600"
+                                  >
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Activate
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    disabled={license.status === 'inactive'}
+                                    onClick={() => openStatusConfirm(license.id, 'inactive')}
+                                    className="text-amber-600 focus:text-amber-600"
+                                  >
+                                    <RotateCcw className="mr-2 h-4 w-4" />
+                                    Deactivate
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => openStatusConfirm(license.id, 'revoked')}
+                                    className="text-red-600 focus:text-red-600 font-medium"
+                                  >
+                                    <ShieldAlert className="mr-2 h-4 w-4" />
+                                    Revoke
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             )}
                           </div>
                         </TableCell>
@@ -323,6 +439,16 @@ const Licenses: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleStatusUpdate}
+        title={title}
+        description={description}
+        destructive={destructive}
+        isLoading={isUpdating}
+      />
     </AdminLayout>
   );
 };
