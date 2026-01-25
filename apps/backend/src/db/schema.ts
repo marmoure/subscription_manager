@@ -33,9 +33,12 @@ export const userSubmissions = sqliteTable('user_submissions', {
   ipAddress: text('ip_address'),
   licenseKeyId: integer('license_key_id').references(() => licenseKeys.id),
 }, (table) => ({
+  nameIdx: index('submission_name_idx').on(table.name),
   emailIdx: index('submission_email_idx').on(table.email),
+  shopNameIdx: index('submission_shop_name_idx').on(table.shopName),
   machineIdIdx: index('submission_machine_id_idx').on(table.machineId),
   submissionDateIdx: index('submission_date_idx').on(table.submissionDate),
+  cashiersIdx: index('submission_cashiers_idx').on(table.numberOfCashiers),
 }));
 
 export const apiKeys = sqliteTable('api_keys', {
