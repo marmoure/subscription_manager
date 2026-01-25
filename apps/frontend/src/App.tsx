@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import AdminDashboard from './pages/AdminDashboard';
+import Dashboard from './pages/admin/Dashboard';
 import Licenses from './pages/admin/Licenses';
 import LicenseDetail from './pages/admin/LicenseDetail';
 import Submissions from './pages/admin/Submissions';
@@ -26,7 +26,7 @@ const App: React.FC = () => {
           path="/admin" 
           element={
             <ProtectedRoute>
-              <AdminDashboard />
+              <Dashboard />
             </ProtectedRoute>
           } 
         />

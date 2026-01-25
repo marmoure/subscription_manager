@@ -7,6 +7,7 @@ import apiRoutes from './routes/api.routes.js'
 import adminAuthRoutes from './routes/admin/auth.routes.js'
 import adminLicenseRoutes from './routes/admin/licenses.routes.js'
 import adminSubmissionRoutes from './routes/admin/submissions.routes.js'
+import adminDashboardRoutes from './routes/admin/dashboard.routes.js'
 
 export const app = new Hono()
 
@@ -21,6 +22,7 @@ app.route('/api/public', publicRoutes)
 app.route('/api/admin', adminAuthRoutes)
 app.route('/api/admin', adminLicenseRoutes)
 app.route('/api/admin', adminSubmissionRoutes)
+app.route('/api/admin', adminDashboardRoutes)
 
 // Software API routes (RPC)
 const routes = app.route('/api/v1', apiRoutes)

@@ -150,3 +150,43 @@ export const revokeLicense = async (
   });
   return response.data;
 };
+
+export interface DashboardStatsResponse {
+  success: boolean;
+  data: {
+    stats: {
+      totalLicenses: number;
+      activeLicenses: number;
+      submissionsThisMonth: number;
+      growth: number;
+    };
+    charts: {
+      licensesOverTime: { date: string; count: number }[];
+      licenseStatus: { status: string; count: number }[];
+      submissionsByDay: { date: string; count: number }[];
+    };
+    activity: {
+      recentSubmissions: {
+        id: number;
+        name: string;
+        email: string;
+        submissionDate: string;
+        shopName: string;
+      }[];
+      recentStatusChanges: {
+        id: number;
+        oldStatus: string | null;
+        newStatus: string;
+        timestamp: string;
+        adminUsername: string | null;
+        licenseKey: { licenseKey: string } | null;
+      }[];
+    };
+  };
+}
+
+export const getDashboardStats = async (): Promise<DashboardStatsResponse> => {
+  const response = await apiClient.get<DashboardStatsResponse>('/api/admin/dashboard/stats');
+  return response.data;
+};
+
