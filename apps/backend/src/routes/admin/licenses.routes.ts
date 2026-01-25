@@ -1,10 +1,17 @@
 import { Hono } from 'hono';
-import { authenticateAdmin } from '../../middleware/authenticateAdmin';
+import { authenticateAdmin, type AdminVariables } from '../../middleware/authenticateAdmin';
 import { zValidator } from '../../middleware/validator';
-import { listLicensesQuerySchema, getLicenseByIdSchema, type ListLicensesQueryInput, type GetLicenseByIdInput } from '../../schemas/license.schema';
+import { 
+  listLicensesQuerySchema, 
+  getLicenseByIdSchema, 
+  updateLicenseStatusSchema,
+  type ListLicensesQueryInput, 
+  type GetLicenseByIdInput,
+  type UpdateLicenseStatusInput
+} from '../../schemas/license.schema';
 import { LicenseService } from '../../services/license.service';
 
-const adminLicenseRoutes = new Hono()
+const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
   /**
    * GET /api/admin/licenses
    * Fetches all license keys with pagination and optional filtering by status.
@@ -68,6 +75,51 @@ const adminLicenseRoutes = new Hono()
         return c.json({
           success: false,
           message: 'Internal server error while fetching license details'
+        }, 500);
+      }
+    }
+  )
+  /**
+   * PATCH /api/admin/licenses/:id/status
+   * Updates the status of a license (active, inactive, revoked).
+   * Logs the action for audit trail.
+   * Requires admin authentication.
+   */
+  .patch(
+    '/licenses/:id/status',
+    authenticateAdmin,
+    zValidator('param', getLicenseByIdSchema),
+    zValidator('json', updateLicenseStatusSchema),
+    async (c) => {
+      const { id } = (c as any).get('validated') as GetLicenseByIdInput;
+      const { status, reason } = (c as any).get('validated') as UpdateLicenseStatusInput;
+      const admin = c.get('admin');
+
+      try {
+        const updatedLicense = await LicenseService.updateLicenseStatus(
+          id,
+          status,
+          admin.id,
+          reason
+        );
+
+        if (!updatedLicense) {
+          return c.json({
+            success: false,
+            message: 'License not found'
+          }, 404);
+        }
+
+        return c.json({
+          success: true,
+          message: `License status updated to ${status}`,
+          data: updatedLicense
+        }, 200);
+      } catch (error) {
+        console.error(`Error in update license status route: ${error}`);
+        return c.json({
+          success: false,
+          message: 'Internal server error while updating license status'
         }, 500);
       }
     }

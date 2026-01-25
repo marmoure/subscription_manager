@@ -27,3 +27,10 @@ export const getLicenseByIdSchema = z.object({
 });
 
 export type GetLicenseByIdInput = z.infer<typeof getLicenseByIdSchema>;
+
+export const updateLicenseStatusSchema = z.object({
+  status: z.enum(['active', 'inactive', 'revoked']),
+  reason: z.string().optional().describe('Reason for status change'),
+});
+
+export type UpdateLicenseStatusInput = z.infer<typeof updateLicenseStatusSchema>;

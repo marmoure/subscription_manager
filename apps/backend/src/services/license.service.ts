@@ -1,5 +1,5 @@
 import { db } from '../db/db';
-import { licenseKeys, userSubmissions, verificationLogs, type LicenseKey, type UserSubmission, type NewUserSubmission, type VerificationLog } from '../db/schema';
+import { licenseKeys, userSubmissions, verificationLogs, licenseStatusLogs, adminUsers, type LicenseKey, type UserSubmission, type NewUserSubmission, type VerificationLog, type LicenseStatusLog } from '../db/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { generateLicense } from '../utils/licenseKeyGenerator';
 
@@ -389,6 +389,71 @@ export class LicenseService {
     } catch (error) {
       console.error(`Error verifying license: ${error}`);
       throw new Error('Verification failed due to a database error');
+    }
+  }
+
+  /**
+   * Updates the status of a license and logs the change.
+   * @param id License ID
+   * @param status New status
+   * @param adminId Admin user ID performing the action
+   * @param reason Optional reason for the status change
+   * @returns The updated license or null if not found
+   */
+  static async updateLicenseStatus(
+    id: number,
+    status: 'active' | 'inactive' | 'revoked',
+    adminId: number,
+    reason?: string
+  ): Promise<LicenseKey | null> {
+    try {
+      // Find the license first to get the current status
+      const license = await db.query.licenseKeys.findFirst({
+        where: eq(licenseKeys.id, id),
+      });
+
+      if (!license) {
+        return null;
+      }
+
+      // If status is the same, just return the license
+      if (license.status === status) {
+        return license;
+      }
+
+      const oldStatus = license.status;
+
+      // Update in a transaction
+      return db.transaction((tx) => {
+        // 1. Update the license status
+        const [updatedLicense] = tx.update(licenseKeys)
+          .set({ 
+            status,
+            updatedAt: new Date()
+          })
+          .where(eq(licenseKeys.id, id))
+          .returning()
+          .all();
+
+        if (!updatedLicense) {
+          throw new Error('Failed to update license status');
+        }
+
+        // 2. Log the status change
+        tx.insert(licenseStatusLogs).values({
+          licenseKeyId: id,
+          oldStatus: oldStatus as 'active' | 'inactive' | 'revoked',
+          newStatus: status,
+          adminId,
+          reason: reason || null,
+          timestamp: new Date(),
+        }).run();
+
+        return updatedLicense;
+      });
+    } catch (error) {
+      console.error(`Error in updateLicenseStatus: ${error}`);
+      throw new Error('Database update failed while updating license status');
     }
   }
 }

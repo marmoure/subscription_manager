@@ -77,15 +77,41 @@ export const verificationLogs = sqliteTable('verification_logs', {
   timestampIdx: index('verification_logs_timestamp_idx').on(table.timestamp),
 }));
 
+export const licenseStatusLogs = sqliteTable('license_status_logs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  licenseKeyId: integer('license_key_id').notNull().references(() => licenseKeys.id),
+  oldStatus: text('old_status', { enum: ['active', 'inactive', 'revoked'] }),
+  newStatus: text('new_status', { enum: ['active', 'inactive', 'revoked'] }).notNull(),
+  adminId: integer('admin_id').notNull().references(() => adminUsers.id),
+  reason: text('reason'),
+  timestamp: integer('timestamp', { mode: 'timestamp' }).notNull().default(new Date()),
+}, (table) => ({
+  licenseKeyIdIdx: index('license_status_logs_license_key_id_idx').on(table.licenseKeyId),
+  adminIdIdx: index('license_status_logs_admin_id_idx').on(table.adminId),
+  timestampIdx: index('license_status_logs_timestamp_idx').on(table.timestamp),
+}));
+
 export const licenseKeysRelations = relations(licenseKeys, ({ one, many }) => ({
   submission: one(userSubmissions),
   verificationLogs: many(verificationLogs),
+  statusLogs: many(licenseStatusLogs),
 }));
 
 export const verificationLogsRelations = relations(verificationLogs, ({ one }) => ({
   licenseKey: one(licenseKeys, {
     fields: [verificationLogs.licenseKeyId],
     references: [licenseKeys.id],
+  }),
+}));
+
+export const licenseStatusLogsRelations = relations(licenseStatusLogs, ({ one }) => ({
+  licenseKey: one(licenseKeys, {
+    fields: [licenseStatusLogs.licenseKeyId],
+    references: [licenseKeys.id],
+  }),
+  admin: one(adminUsers, {
+    fields: [licenseStatusLogs.adminId],
+    references: [adminUsers.id],
   }),
 }));
 
@@ -113,3 +139,6 @@ export type NewApiKey = InferInsertModel<typeof apiKeys>;
 
 export type VerificationLog = InferSelectModel<typeof verificationLogs>;
 export type NewVerificationLog = InferInsertModel<typeof verificationLogs>;
+
+export type LicenseStatusLog = InferSelectModel<typeof licenseStatusLogs>;
+export type NewLicenseStatusLog = InferInsertModel<typeof licenseStatusLogs>;
