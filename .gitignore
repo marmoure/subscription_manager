@@ -55,6 +55,8 @@ Thumbs.db
 secrets/
 config/secrets.yml
 config/master.key
+private_key.pem
+license-log.json
 
 # pnpm specific
 .pnp.*
