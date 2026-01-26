@@ -1,4 +1,7 @@
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+
+process.env.NODE_ENV = 'test';
+
 import { app } from '../src/index';
 import { db, client } from '../src/db/db';
 import { apiKeys } from '../src/db/schema';
@@ -6,7 +9,7 @@ import { eq } from 'drizzle-orm';
 
 describe('Rate Limiting Tests', () => {
   const TEST_API_KEY = 'test-api-key-for-rate-limiting';
-  const RUN_ID = Math.random().toString(36).substring(7);
+  const RUN_ID = Date.now().toString(36);
 
   beforeAll(async () => {
     // Ensure we have a test API key in the DB
@@ -22,8 +25,6 @@ describe('Rate Limiting Tests', () => {
     } catch (e) {
         console.error('Failed to setup test API key', e);
     }
-    
-    process.env.NODE_ENV = 'test';
   });
 
   afterAll(async () => {
@@ -35,7 +36,7 @@ describe('Rate Limiting Tests', () => {
       const ip = '1.2.3.4';
       const payload = {
         name: 'Test User',
-        machineId: 'MACHINE-RATE-LIMIT-1',
+        machineId: 'MACHINERATELIMIT1',
         phone: '1234567890',
         shopName: 'Test Shop',
         email: 'test@example.com',
@@ -44,7 +45,7 @@ describe('Rate Limiting Tests', () => {
       };
 
       for (let i = 0; i < 10; i++) {
-        const currentPayload = { ...payload, machineId: `MACHINE-RL-PUBLIC-${RUN_ID}-${i}` };
+        const currentPayload = { ...payload, machineId: `MACHINERLPUBLIC${RUN_ID}${i}`.replace(/[^a-zA-Z0-9]/g, '') };
         
         const res = await app.request('/api/public/submit-license-request', {
           method: 'POST',
@@ -78,7 +79,7 @@ describe('Rate Limiting Tests', () => {
         },
         body: JSON.stringify({
           name: 'Test User 2',
-          machineId: `MACHINE-RL-PUBLIC-DIFF-IP-${RUN_ID}`,
+          machineId: `MACHINERLPUBLICDIFFIP${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
           phone: '1234567890',
           shopName: 'Test Shop',
           email: 'test2@example.com',
@@ -100,7 +101,7 @@ describe('Rate Limiting Tests', () => {
             'X-API-Key': TEST_API_KEY
           },
           body: JSON.stringify({
-            machineId: `ANY-MACHINE-${RUN_ID}-${i}`
+            machineId: `ANYMACHINE${RUN_ID}${i}`.replace(/[^a-zA-Z0-9]/g, '')
           })
         });
 
@@ -133,7 +134,7 @@ describe('Rate Limiting Tests', () => {
                 },
                 body: JSON.stringify({
                     name: 'Reset Test',
-                    machineId: `RESET-TEST-${RUN_ID}-${i}`,
+                    machineId: `RESETTEST${RUN_ID}${i}`.replace(/[^a-zA-Z0-9]/g, ''),
                     phone: '1234567890',
                     shopName: 'Shop',
                     email: 'reset@example.com',
@@ -145,8 +146,16 @@ describe('Rate Limiting Tests', () => {
 
         const resLimit = await app.request('/api/public/submit-license-request', {
             method: 'POST',
-            headers: { 'X-Forwarded-For': ip },
-            body: JSON.stringify({})
+            headers: { 'X-Forwarded-For': ip, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: 'Limit Test',
+              machineId: `LIMITTEST${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
+              phone: '1234567890',
+              shopName: 'Shop',
+              email: 'limit@example.com',
+              numberOfCashiers: 1,
+              captchaToken: 'test-token'
+            })
         });
         expect(resLimit.status).toBe(429);
 
@@ -160,7 +169,7 @@ describe('Rate Limiting Tests', () => {
             },
             body: JSON.stringify({
                 name: 'Reset Test 2',
-                machineId: `RESET-TEST-AFTER-${RUN_ID}`,
+                machineId: `RESETTESTAFTER${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
                 phone: '1234567890',
                 shopName: 'Shop',
                 email: 'reset2@example.com',

@@ -5,78 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1769297594364,
-      "tag": "0000_20260125000000_initial_schema",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1769343252424,
-      "tag": "0001_misty_hellfire_club",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1769343884096,
-      "tag": "0002_flashy_galactus",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1769343902373,
-      "tag": "0003_awesome_proemial_gods",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1769343913849,
-      "tag": "0004_slimy_whizzer",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1769353187875,
-      "tag": "0005_abandoned_angel",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1769353217818,
-      "tag": "0006_blue_adam_warlock",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1769357152316,
-      "tag": "0007_handy_miss_america",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1769357966308,
-      "tag": "0008_common_patch",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "6",
-      "when": 1769360858041,
-      "tag": "0009_amazing_spacker_dave",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "6",
-      "when": 1769457036235,
-      "tag": "0010_thin_bulldozer",
+      "when": 1769458277208,
+      "tag": "0000_charming_arclight",
       "breakpoints": true
     }
   ]

@@ -1,12 +1,19 @@
 import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+
+process.env.NODE_ENV = 'test';
+process.env.RECAPTCHA_SECRET_KEY = 'test-secret';
+
 import { app } from '../src/index';
 import { client } from '../src/db/db';
 
-describe('CAPTCHA and Spam Prevention Tests', () => {
-  const RUN_ID = Math.random().toString(36).substring(7);
+// Mock global fetch
+global.fetch = jest.fn() as any;
 
-  beforeAll(() => {
-    process.env.NODE_ENV = 'test';
+describe('CAPTCHA and Spam Prevention Tests', () => {
+  const RUN_ID = Date.now().toString(36);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -16,7 +23,7 @@ describe('CAPTCHA and Spam Prevention Tests', () => {
   describe('CAPTCHA Validation', () => {
     const payload = {
       name: 'Captcha Test',
-      machineId: `MACHINE-CAPTCHA-${RUN_ID}`,
+      machineId: `MACHINECAPTCHA${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
       phone: '1234567890',
       shopName: 'Captcha Shop',
       email: 'captcha@example.com',
@@ -41,6 +48,10 @@ describe('CAPTCHA and Spam Prevention Tests', () => {
     });
 
     it('should reject submission with invalid CAPTCHA token', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        json: async () => ({ success: false, 'error-codes': ['invalid-input-response'] })
+      });
+
       const res = await app.request('/api/public/submit-license-request', {
         method: 'POST',
         headers: {
@@ -49,32 +60,31 @@ describe('CAPTCHA and Spam Prevention Tests', () => {
         body: JSON.stringify({ ...payload, captchaToken: 'invalid-token' })
       });
 
-      // Note: In test mode, it only bypasses if token === 'test-token'
-      // Otherwise it tries to call Google API, which might fail or reject
-      // Since we don't have a real secret key in tests, it should fail
       expect(res.status).toBe(400);
       const data = await res.json() as any;
       expect(data.message).toContain('CAPTCHA verification failed');
     });
 
     it('should accept submission with valid test token in test env', async () => {
+      // No fetch call expected due to test-token bypass
       const res = await app.request('/api/public/submit-license-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ ...payload, machineId: `MACHINE-CAPTCHA-SUCCESS-${RUN_ID}` })
+        body: JSON.stringify({ ...payload, machineId: `MACHINECAPTCHASUCCESS${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, '') })
       });
 
       expect(res.status).toBe(201);
       const data = await res.json() as any;
       expect(data.success).toBe(true);
+      expect(global.fetch).not.toHaveBeenCalled();
     });
   });
 
   describe('Spam Prevention - Duplicate Submissions', () => {
     it('should reject duplicate submissions for the same machine ID', async () => {
-      const machineId = `MACHINE-DUPLICATE-${RUN_ID}`;
+      const machineId = `MACHINEDUPLICATE${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, '');
       const payload = {
         name: 'Duplicate Test',
         machineId,
@@ -117,7 +127,7 @@ describe('CAPTCHA and Spam Prevention Tests', () => {
         },
         body: JSON.stringify({
           name: 'Bot User',
-          machineId: `MACHINE-BOT-${RUN_ID}`,
+          machineId: `MACHINEBOT${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
           phone: '1234567890',
           shopName: 'Bot Shop',
           email: 'bot@example.com',

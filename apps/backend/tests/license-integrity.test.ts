@@ -7,9 +7,16 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const PUBLIC_KEY_PATH = path.join(__dirname, '..', 'src', 'utils', 'public_key.pem');
+// Helper for __dirname in ESM
+const getDirname = () => {
+  const currentCwd = process.cwd();
+  if (currentCwd.endsWith('apps/backend') || currentCwd.endsWith('apps\\backend')) {
+    return path.join(currentCwd, 'tests');
+  }
+  return path.join(currentCwd, 'apps', 'backend', 'tests');
+};
+const __dirname_val = getDirname();
+const PUBLIC_KEY_PATH = path.join(__dirname_val, '..', 'src', 'utils', 'public_key.pem');
 
 describe('License Key Integrity and Performance Tests', () => {
   const testMachineId = 'TEST-MACHINE-123';

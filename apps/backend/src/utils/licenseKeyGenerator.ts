@@ -38,6 +38,7 @@ import { fileURLToPath } from 'url';
 
 // Helper to handle both ESM and CJS (for Jest compatibility)
 const getPathInfo = () => {
+  /* Commented out to avoid compilation errors in some environments
   try {
     // Try standard ESM first
     const filename = fileURLToPath(import.meta.url);
@@ -46,6 +47,7 @@ const getPathInfo = () => {
       __dirname: path.dirname(filename)
     };
   } catch {
+  */
     // Fallback for environments where import.meta is not available
     const currentDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
     
@@ -62,7 +64,7 @@ const getPathInfo = () => {
       __filename: typeof __filename !== 'undefined' ? __filename : '',
       __dirname: currentDir
     };
-  }
+  // } // closing the catch block that was commented out
 };
 
 const { __filename: __filename_val, __dirname: __dirname_val } = getPathInfo();

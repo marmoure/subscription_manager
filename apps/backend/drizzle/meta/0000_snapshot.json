@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "7829d5b1-c44a-4705-899c-39a430816d01",
+  "id": "f38a88ca-6679-4e3e-ac9c-209b266cf2dc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin_users": {
@@ -35,13 +35,21 @@
           "notNull": true,
           "autoincrement": false
         },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'admin'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-26T20:11:17.199Z\"'"
         },
         "last_login_at": {
           "name": "last_login_at",
@@ -110,11 +118,18 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-26T20:11:17.198Z\"'"
         },
         "last_used_at": {
           "name": "last_used_at",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_ip_address": {
+          "name": "last_ip_address",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -134,6 +149,27 @@
           "notNull": true,
           "autoincrement": false,
           "default": 0
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revoked_by": {
+          "name": "revoked_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revocation_reason": {
+          "name": "revocation_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -152,7 +188,21 @@
           "isUnique": false
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "api_keys_revoked_by_admin_users_id_fk": {
+          "name": "api_keys_revoked_by_admin_users_id_fk",
+          "tableFrom": "api_keys",
+          "tableTo": "admin_users",
+          "columnsFrom": [
+            "revoked_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -195,7 +245,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-26T20:11:17.198Z\"'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -203,10 +253,17 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-26T20:11:17.198Z\"'"
         },
         "expires_at": {
           "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -237,6 +294,196 @@
         }
       },
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "license_status_logs": {
+      "name": "license_status_logs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "license_key_id": {
+          "name": "license_key_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "old_status": {
+          "name": "old_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "new_status": {
+          "name": "new_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "admin_id": {
+          "name": "admin_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'\"2026-01-26T20:11:17.199Z\"'"
+        }
+      },
+      "indexes": {
+        "license_status_logs_license_key_id_idx": {
+          "name": "license_status_logs_license_key_id_idx",
+          "columns": [
+            "license_key_id"
+          ],
+          "isUnique": false
+        },
+        "license_status_logs_admin_id_idx": {
+          "name": "license_status_logs_admin_id_idx",
+          "columns": [
+            "admin_id"
+          ],
+          "isUnique": false
+        },
+        "license_status_logs_timestamp_idx": {
+          "name": "license_status_logs_timestamp_idx",
+          "columns": [
+            "timestamp"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "license_status_logs_license_key_id_license_keys_id_fk": {
+          "name": "license_status_logs_license_key_id_license_keys_id_fk",
+          "tableFrom": "license_status_logs",
+          "tableTo": "license_keys",
+          "columnsFrom": [
+            "license_key_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "license_status_logs_admin_id_admin_users_id_fk": {
+          "name": "license_status_logs_admin_id_admin_users_id_fk",
+          "tableFrom": "license_status_logs",
+          "tableTo": "admin_users",
+          "columnsFrom": [
+            "admin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "refresh_tokens": {
+      "name": "refresh_tokens",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "admin_id": {
+          "name": "admin_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "refresh_tokens_token_unique": {
+          "name": "refresh_tokens_token_unique",
+          "columns": [
+            "token"
+          ],
+          "isUnique": true
+        },
+        "token_idx": {
+          "name": "token_idx",
+          "columns": [
+            "token"
+          ],
+          "isUnique": true
+        },
+        "refresh_token_admin_id_idx": {
+          "name": "refresh_token_admin_id_idx",
+          "columns": [
+            "admin_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "refresh_tokens_admin_id_admin_users_id_fk": {
+          "name": "refresh_tokens_admin_id_admin_users_id_fk",
+          "tableFrom": "refresh_tokens",
+          "tableTo": "admin_users",
+          "columnsFrom": [
+            "admin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -299,7 +546,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.356Z\"'"
+          "default": "'\"2026-01-26T20:11:17.198Z\"'"
         },
         "ip_address": {
           "name": "ip_address",
@@ -317,10 +564,24 @@
         }
       },
       "indexes": {
+        "submission_name_idx": {
+          "name": "submission_name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": false
+        },
         "submission_email_idx": {
           "name": "submission_email_idx",
           "columns": [
             "email"
+          ],
+          "isUnique": false
+        },
+        "submission_shop_name_idx": {
+          "name": "submission_shop_name_idx",
+          "columns": [
+            "shop_name"
           ],
           "isUnique": false
         },
@@ -335,6 +596,13 @@
           "name": "submission_date_idx",
           "columns": [
             "submission_date"
+          ],
+          "isUnique": false
+        },
+        "submission_cashiers_idx": {
+          "name": "submission_cashiers_idx",
+          "columns": [
+            "number_of_cashiers"
           ],
           "isUnique": false
         }
@@ -388,7 +656,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2026-01-24T23:33:14.355Z\"'"
+          "default": "'\"2026-01-26T20:11:17.197Z\"'"
         }
       },
       "indexes": {
@@ -401,6 +669,102 @@
         }
       },
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "verification_logs": {
+      "name": "verification_logs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "license_key_id": {
+          "name": "license_key_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "machine_id": {
+          "name": "machine_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'\"2026-01-26T20:11:17.199Z\"'"
+        }
+      },
+      "indexes": {
+        "verification_logs_license_key_id_idx": {
+          "name": "verification_logs_license_key_id_idx",
+          "columns": [
+            "license_key_id"
+          ],
+          "isUnique": false
+        },
+        "verification_logs_machine_id_idx": {
+          "name": "verification_logs_machine_id_idx",
+          "columns": [
+            "machine_id"
+          ],
+          "isUnique": false
+        },
+        "verification_logs_timestamp_idx": {
+          "name": "verification_logs_timestamp_idx",
+          "columns": [
+            "timestamp"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "verification_logs_license_key_id_license_keys_id_fk": {
+          "name": "verification_logs_license_key_id_license_keys_id_fk",
+          "tableFrom": "verification_logs",
+          "tableTo": "license_keys",
+          "columnsFrom": [
+            "license_key_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
