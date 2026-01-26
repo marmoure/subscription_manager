@@ -39,17 +39,28 @@ import { fileURLToPath } from 'url';
 // Helper to handle both ESM and CJS (for Jest compatibility)
 const getPathInfo = () => {
   try {
-    const metaUrl = eval('import.meta.url');
-    const filename = fileURLToPath(metaUrl);
+    // Try standard ESM first
+    const filename = fileURLToPath(import.meta.url);
     return {
       __filename: filename,
       __dirname: path.dirname(filename)
     };
   } catch {
-    // Fallback for environments where import.meta is not available (like some Jest configs)
+    // Fallback for environments where import.meta is not available
+    const currentDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
+    
+    // If we are in the package root but the file is in src/utils (common in dev/test)
+    const srcUtilsPath = path.join(currentDir, 'src', 'utils');
+    if (fs.existsSync(path.join(srcUtilsPath, 'licenseKeyGenerator.ts'))) {
+      return {
+        __filename: path.join(srcUtilsPath, 'licenseKeyGenerator.ts'),
+        __dirname: srcUtilsPath
+      };
+    }
+
     return {
       __filename: typeof __filename !== 'undefined' ? __filename : '',
-      __dirname: typeof __dirname !== 'undefined' ? __dirname : process.cwd()
+      __dirname: currentDir
     };
   }
 };
@@ -93,13 +104,15 @@ function generateLicense(
   // Read private key
   const privateKey = fs.readFileSync(PRIVATE_KEY_PATH, 'utf8');
 
-  // Create license payload with issue date
+  // Create license payload with issue date and a random nonce for uniqueness
   const issueDate = new Date().toISOString();
+  const nonce = crypto.randomBytes(8).toString('hex');
   const payload: any = {
     machineId: machineId.trim(),
     appName: appName.trim(),
     maxUsers,
     issueDate,
+    nonce,
   };
   
   // Add daysValid only if provided (for expiring licenses)

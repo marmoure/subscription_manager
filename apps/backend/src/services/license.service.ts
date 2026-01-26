@@ -318,14 +318,11 @@ export class LicenseService {
           serialKey = licenseResult.serialKey;
           expiresDate = licenseResult.expiresDate;
 
-          // this is a query promise we need to resolve it
-          // const existing = tx.query.licenseKeys.findFirst({
-          //   where: eq(licenseKeys.licenseKey, serialKey),
-          // });
+          const existing = tx.select().from(licenseKeys).where(eq(licenseKeys.licenseKey, serialKey)).get();
 
-          // if (!existing) {
-          isUnique = true;
-          // }
+          if (!existing) {
+            isUnique = true;
+          }
         }
 
         if (!isUnique) {
