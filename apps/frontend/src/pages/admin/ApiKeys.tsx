@@ -11,7 +11,9 @@ import {
   AlertCircle,
   Clock,
   Activity,
-  Trash2
+  Trash2,
+  Calendar,
+  AlertTriangle
 } from 'lucide-react';
 import {
   Table,
@@ -25,8 +27,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { Pagination } from '@/components/Pagination';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -142,6 +155,7 @@ const ApiKeys: React.FC = () => {
       if (response.success) {
         setCreatedKey({ key: response.data.key, name: response.data.name });
         setNewKeyName('');
+        setIsCreateOpen(false);
         fetchApiKeys();
       } else {
         setError(response.message || 'Failed to create API key');
@@ -184,67 +198,19 @@ const ApiKeys: React.FC = () => {
               <RotateCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button size="sm" onClick={() => { setIsCreateOpen(true); setCreatedKey(null); }}>
+            <Button size="sm" onClick={() => { setIsCreateOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />
-              New API Key
+              Generate New API Key
             </Button>
           </div>
         </div>
 
         {successMessage && (
           <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-900/50 dark:text-green-400">
+            <Check className="h-4 w-4" />
             <AlertTitle>Success</AlertTitle>
             <AlertDescription>{successMessage}</AlertDescription>
           </Alert>
-        )}
-
-        {createdKey && (
-          <Alert className="bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-900/50 dark:text-blue-400">
-            <AlertTitle className="flex items-center gap-2 text-lg">
-              <ShieldAlert className="h-5 w-5 text-blue-600" />
-              API Key Created: {createdKey.name}
-            </AlertTitle>
-            <AlertDescription className="mt-4">
-              <p className="font-semibold text-red-600 mb-2">IMPORTANT: This is the only time the full API key will be shown. Please save it securely.</p>
-              <div className="flex items-center gap-2 mt-2">
-                <code className="bg-white dark:bg-slate-900 px-3 py-2 rounded border font-mono text-sm flex-1 break-all">
-                  {createdKey.key}
-                </code>
-                <Button variant="outline" size="icon" onClick={copyToClipboard}>
-                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-              <Button variant="ghost" size="sm" className="mt-4" onClick={() => setCreatedKey(null)}>
-                Dismiss
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {isCreateOpen && !createdKey && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardHeader>
-              <CardTitle>Create New API Key</CardTitle>
-              <CardDescription>Enter a name for this key to identify its purpose.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Input 
-                  placeholder="e.g. Production Mobile App" 
-                  value={newKeyName}
-                  onChange={(e) => setNewKeyName(e.target.value)}
-                  disabled={isUpdating}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreateKey()}
-                />
-                <Button onClick={handleCreateKey} disabled={isUpdating || !newKeyName.trim()}>
-                  {isUpdating ? 'Creating...' : 'Create'}
-                </Button>
-                <Button variant="ghost" onClick={() => setIsCreateOpen(false)} disabled={isUpdating}>
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         <Card>
@@ -291,6 +257,7 @@ const ApiKeys: React.FC = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>API Key</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="hidden lg:table-cell">Created</TableHead>
                     <TableHead className="hidden md:table-cell">Usage</TableHead>
                     <TableHead className="hidden lg:table-cell">Last Used</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -303,6 +270,7 @@ const ApiKeys: React.FC = () => {
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-40" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-12" /></TableCell>
                         <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
@@ -310,13 +278,13 @@ const ApiKeys: React.FC = () => {
                     ))
                   ) : apiKeys.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                         No API keys found.
                       </TableCell>
                     </TableRow>
                   ) : (
                     apiKeys.map((key) => (
-                      <TableRow key={key.id}>
+                      <TableRow key={key.id} className={!key.isActive ? "bg-slate-50/50 dark:bg-slate-900/20" : ""}>
                         <TableCell className="font-medium">{key.name}</TableCell>
                         <TableCell className="font-mono text-xs">{key.maskedKey}</TableCell>
                         <TableCell>
@@ -326,10 +294,21 @@ const ApiKeys: React.FC = () => {
                             <Badge variant="destructive">Revoked</Badge>
                           )}
                         </TableCell>
+                        <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(key.createdAt)}
+                          </div>
+                        </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Activity className="h-3 w-3" />
-                            {key.usageCount} calls
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5 text-xs font-medium">
+                              <Activity className="h-3 w-3 text-primary" />
+                              {key.usageCount} calls
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              Total: {key.metadata?.totalApiCalls || 0}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
@@ -369,6 +348,78 @@ const ApiKeys: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Generation Dialog */}
+      <AlertDialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generate New API Key</AlertDialogTitle>
+            <AlertDialogDescription>
+              Give your new API key a name to help you identify it later. 
+              Maximum 10 active keys allowed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-2">
+            <Label htmlFor="keyName">Key Name</Label>
+            <Input
+              id="keyName"
+              placeholder="e.g. Production Mobile App"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              disabled={isUpdating}
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateKey()}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUpdating}>Cancel</AlertDialogCancel>
+            <Button onClick={handleCreateKey} disabled={isUpdating || !newKeyName.trim()}>
+              {isUpdating ? 'Generating...' : 'Generate Key'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Show Key Dialog */}
+      <AlertDialog open={!!createdKey} onOpenChange={(open) => !open && setCreatedKey(null)}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-blue-600" />
+              API Key Generated
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Save this key securely. It won't be shown again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Key Name</Label>
+              <div className="text-sm font-semibold">{createdKey?.name}</div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Your API Key</Label>
+              <div className="flex items-center gap-2">
+                <code className="bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded border font-mono text-sm flex-1 break-all select-all">
+                  {createdKey?.key}
+                </code>
+                <Button variant="outline" size="icon" onClick={copyToClipboard} title="Copy to clipboard">
+                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex gap-3 dark:bg-amber-900/20 dark:border-amber-900/50">
+              <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-800 dark:text-amber-400">
+                <strong>WARNING:</strong> Save this key securely. It won't be shown again. If you lose it, you'll need to generate a new one.
+              </p>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <Button onClick={() => setCreatedKey(null)}>I've saved it</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ConfirmDialog
         isOpen={isConfirmOpen}

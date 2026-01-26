@@ -161,7 +161,7 @@ export const getApiKeys = async (
   if (isActive) query.isActive = isActive;
   if (search) query.search = search;
 
-  const response = await (client.api.admin['api-keys'].$get as any)({ query });
+  const response = await (client.api.admin as any)['api-keys'].$get({ query });
 
   if (!response.ok) {
     const errorData = await response.json() as any;
@@ -173,7 +173,7 @@ export const getApiKeys = async (
 };
 
 export const createApiKey = async (name: string): Promise<any> => {
-  const response = await (client.api.admin['api-keys'].$post as any)({
+  const response = await (client.api.admin as any)['api-keys'].$post({
     json: { name }
   });
 
@@ -189,7 +189,7 @@ export const revokeApiKey = async (
   id: number,
   reason?: string
 ): Promise<any> => {
-  const response = await (client.api.admin['api-keys'][':id'].$delete as any)({
+  const response = await (client.api.admin as any)['api-keys'][':id'].$delete({
     param: { id: id.toString() },
     json: { reason }
   });
