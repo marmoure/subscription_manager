@@ -37,7 +37,7 @@ export const clearApiKeyCache = (apiKey?: string) => {
 // Rate limiting: Map<apiKey, { count: number, resetAt: number }>
 const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute window
-const MAX_REQUESTS_PER_WINDOW = 60; // 60 requests per minute
+const MAX_REQUESTS_PER_WINDOW = 100; // Updated to 100 as per verification task
 
 /**
  * Middleware to authenticate software API requests using API keys.
@@ -61,30 +61,34 @@ export const validateApiKey = async (c: Context<{ Variables: ApiKeyVariables }>,
 
   // 1. Rate Limiting Check
   const now = Date.now();
-  const rateLimit = rateLimitMap.get(apiKey);
+  let rateLimit = rateLimitMap.get(apiKey);
 
-  if (rateLimit) {
-    if (now < rateLimit.resetAt) {
-      if (rateLimit.count >= MAX_REQUESTS_PER_WINDOW) {
-        return c.json({ 
-          success: false, 
-          message: 'Too Many Requests: Rate limit exceeded' 
-        }, 429);
-      }
-      rateLimit.count++;
-    } else {
-      // Reset window
-      rateLimitMap.set(apiKey, { 
-        count: 1, 
-        resetAt: now + RATE_LIMIT_WINDOW 
-      });
-    }
-  } else {
-    rateLimitMap.set(apiKey, { 
-      count: 1, 
+  if (!rateLimit || now >= rateLimit.resetAt) {
+    // New Key or Reset window
+    rateLimit = { 
+      count: 0, 
       resetAt: now + RATE_LIMIT_WINDOW 
-    });
+    };
+    rateLimitMap.set(apiKey, rateLimit);
   }
+
+  const remaining = Math.max(0, MAX_REQUESTS_PER_WINDOW - rateLimit.count);
+  const resetSeconds = Math.ceil((rateLimit.resetAt - now) / 1000);
+
+  // Set headers
+  c.header('X-RateLimit-Limit', MAX_REQUESTS_PER_WINDOW.toString());
+  c.header('X-RateLimit-Remaining', Math.max(0, remaining - 1).toString());
+  c.header('X-RateLimit-Reset', Math.ceil(rateLimit.resetAt / 1000).toString());
+
+  if (rateLimit.count >= MAX_REQUESTS_PER_WINDOW) {
+    c.header('Retry-After', resetSeconds.toString());
+    return c.json({ 
+      success: false, 
+      message: 'Too Many Requests: Rate limit exceeded' 
+    }, 429);
+  }
+
+  rateLimit.count++;
 
   // 2. Cache Check
   let keyData = apiKeyCache.get(apiKey);
@@ -137,8 +141,14 @@ export const validateApiKey = async (c: Context<{ Variables: ApiKeyVariables }>,
 
   // 4. Asynchronous Update (Last Used, Usage Count & IP Address)
   // We don't await this to keep the request fast
-  const info = getConnInfo(c);
-  const ipAddress = info.remote.address;
+  let ipAddress = 'unknown';
+  try {
+    const info = getConnInfo(c);
+    ipAddress = info.remote.address || 'unknown';
+  } catch (error) {
+    // Fallback for environments where getConnInfo fails (like some test setups)
+    ipAddress = c.req.header('x-forwarded-for') || 'unknown';
+  }
 
   db.update(apiKeys)
     .set({

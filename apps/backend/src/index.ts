@@ -41,9 +41,11 @@ app.get('/api/v1/software/verify', validateApiKey, (c) => {
 
 const port = config.PORT
 
-console.log(`Server is running on port ${port}`)
+if (process.env.NODE_ENV !== 'test') {
+  console.log(`Server is running on port ${port}`)
 
-serve({
-  fetch: app.fetch,
-  port
-})
+  serve({
+    fetch: app.fetch,
+    port
+  })
+}

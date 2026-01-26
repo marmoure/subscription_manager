@@ -7,7 +7,7 @@ if (!process.env.DATABASE_URL) {
   console.warn('DATABASE_URL is not set, defaulting to sqlite.db');
 }
 
-const client = new Database(process.env.DATABASE_URL || 'sqlite.db');
+export const client = new Database(process.env.DATABASE_URL || 'sqlite.db');
 
 export const db = drizzle(client, { 
   schema, 
