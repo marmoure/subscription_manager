@@ -8,6 +8,7 @@ export const submitLicenseRequestSchema = z.object({
   email: z.string().email('Invalid email address'),
   numberOfCashiers: z.number().int().positive('Number of cashiers must be a positive integer'),
   captchaToken: z.string().min(1, 'CAPTCHA token is required'),
+  website: z.string().optional(),
 });
 
 export type SubmitLicenseRequestInput = z.infer<typeof submitLicenseRequestSchema>;

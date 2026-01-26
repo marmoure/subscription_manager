@@ -36,11 +36,28 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Helper to handle both ESM and CJS (for Jest compatibility)
+const getPathInfo = () => {
+  try {
+    const metaUrl = eval('import.meta.url');
+    const filename = fileURLToPath(metaUrl);
+    return {
+      __filename: filename,
+      __dirname: path.dirname(filename)
+    };
+  } catch {
+    // Fallback for environments where import.meta is not available (like some Jest configs)
+    return {
+      __filename: typeof __filename !== 'undefined' ? __filename : '',
+      __dirname: typeof __dirname !== 'undefined' ? __dirname : process.cwd()
+    };
+  }
+};
+
+const { __filename: __filename_val, __dirname: __dirname_val } = getPathInfo();
 
 // Configuration
-const PRIVATE_KEY_PATH = path.join(__dirname, 'private_key.pem');
+const PRIVATE_KEY_PATH = path.join(__dirname_val, 'private_key.pem');
 
 /**
  * Generate a license key
@@ -180,7 +197,7 @@ const args = process.argv.slice(2);
 
 // Check if this file is being run directly
 const isMain = process.argv[1] && (
-  process.argv[1] === __filename || 
+  process.argv[1] === __filename_val || 
   process.argv[1].endsWith('licenseKeyGenerator.ts') ||
   process.argv[1].endsWith('licenseKeyGenerator.js')
 );
@@ -280,7 +297,7 @@ if (isMain) {
     serialKey: license.serialKey,
   };
 
-  const logPath = path.join(__dirname, 'license-log.json');
+  const logPath = path.join(__dirname_val, 'license-log.json');
   let logs = [];
 
   if (fs.existsSync(logPath)) {

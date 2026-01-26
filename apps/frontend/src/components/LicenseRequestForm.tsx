@@ -44,6 +44,7 @@ export function LicenseRequestForm() {
       email: "",
       numberOfCashiers: 1,
       captchaToken: "",
+      website: "",
     },
     mode: "onBlur",
   })
@@ -286,6 +287,26 @@ export function LicenseRequestForm() {
                 </FormItem>
               )}
             />
+
+            {/* Honeypot field - visually hidden to users but visible to bots */}
+            <div className="hidden" aria-hidden="true">
+              <FormField
+                control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Website</FormLabel>
+                    <FormControl>
+                      <Input
+                        tabIndex={-1}
+                        autoComplete="off"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

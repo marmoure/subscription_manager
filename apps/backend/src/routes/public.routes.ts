@@ -18,6 +18,15 @@ const publicRoutes = new Hono()
         const validatedData = (c as any).get('validated') as SubmitLicenseRequestInput;
         const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
 
+        // Honeypot check: if website field is filled, it's likely a bot
+        if (validatedData.website) {
+          console.warn(`Spam detected from IP: ${ipAddress}. Honeypot field filled.`);
+          return c.json({
+            success: false,
+            message: 'Spam detected'
+          }, 400);
+        }
+
         // Use a single transaction to create submission and license
         const license = await LicenseService.createLicenseWithTransaction({
           name: validatedData.name,
