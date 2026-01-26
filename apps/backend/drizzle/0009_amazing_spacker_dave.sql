@@ -10,7 +10,7 @@ CREATE TABLE `__new_admin_users` (
 	`is_active` integer DEFAULT true NOT NULL
 );
 --> statement-breakpoint
-INSERT INTO `__new_admin_users`("id", "username", "hashed_password", "email", "role", "created_at", "last_login_at", "is_active") SELECT "id", "username", "hashed_password", "email", "role", "created_at", "last_login_at", "is_active" FROM `admin_users`;--> statement-breakpoint
+INSERT INTO `__new_admin_users`("id", "username", "hashed_password", "email", "role", "created_at", "last_login_at", "is_active") SELECT "id", "username", "hashed_password", "email", 'admin', "created_at", "last_login_at", "is_active" FROM `admin_users`;--> statement-breakpoint
 DROP TABLE `admin_users`;--> statement-breakpoint
 ALTER TABLE `__new_admin_users` RENAME TO `admin_users`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint
@@ -42,7 +42,7 @@ CREATE TABLE `__new_license_keys` (
 	`revoked_at` integer
 );
 --> statement-breakpoint
-INSERT INTO `__new_license_keys`("id", "license_key", "machine_id", "status", "created_at", "updated_at", "expires_at", "revoked_at") SELECT "id", "license_key", "machine_id", "status", "created_at", "updated_at", "expires_at", "revoked_at" FROM `license_keys`;--> statement-breakpoint
+INSERT INTO `__new_license_keys`("id", "license_key", "machine_id", "status", "created_at", "updated_at", "expires_at", "revoked_at") SELECT "id", "license_key", "machine_id", "status", "created_at", "updated_at", "expires_at", NULL FROM `license_keys`;--> statement-breakpoint
 DROP TABLE `license_keys`;--> statement-breakpoint
 ALTER TABLE `__new_license_keys` RENAME TO `license_keys`;--> statement-breakpoint
 CREATE UNIQUE INDEX `license_keys_license_key_unique` ON `license_keys` (`license_key`);--> statement-breakpoint

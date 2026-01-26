@@ -57,8 +57,9 @@ export const refreshAccessToken = async (refreshToken: string): Promise<RefreshT
 
 
 export const logout = async (refreshToken: string): Promise<{ success: boolean }> => {
-
-  const response = await client.api.admin.logout.$post();
+  const response = await client.api.admin.logout.$post({
+    json: { refreshToken }
+  });
 
 
 

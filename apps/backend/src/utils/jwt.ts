@@ -1,10 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
+import crypto from 'crypto';
 
 export interface TokenPayload {
   adminId: number;
   username: string;
   email: string;
+  jti?: string;
 }
 
 /**
@@ -24,8 +26,8 @@ export const generateAccessToken = (payload: TokenPayload, expiresIn: string = '
  * @returns A signed JWT string
  */
 export const generateRefreshToken = (payload: TokenPayload, expiresIn: string = '7d'): string => {
-  // In a more robust implementation, you might use a different secret for refresh tokens
-  return jwt.sign(payload, config.JWT_SECRET, { expiresIn: expiresIn as any });
+  const jti = crypto.randomBytes(16).toString('hex');
+  return jwt.sign({ ...payload, jti }, config.JWT_SECRET, { expiresIn: expiresIn as any });
 };
 
 /**

@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
 import { db } from '../../db/db';
-import { adminUsers } from '../../db/schema';
+import { adminUsers, refreshTokens } from '../../db/schema';
 import { registerAdminSchema, loginAdminSchema, type RegisterAdminInput, type LoginAdminInput } from '../../schemas/admin.schema';
 import { zValidator } from '../../middleware/validator';
 import { hashPassword, verifyPassword } from '../../utils/password';
 import { verifyToken, generateAccessToken, generateRefreshToken } from '../../utils/jwt';
 import { rateLimiter } from '../../middleware/rateLimiter';
-import { sql, eq, or } from 'drizzle-orm';
+import { authenticateAdmin, type AdminVariables } from '../../middleware/authenticateAdmin';
+import { sql, eq, or, and, isNull } from 'drizzle-orm';
 
 const authRoutes = new Hono()
   /**
@@ -37,6 +38,25 @@ const authRoutes = new Hono()
           }, 401);
         }
 
+        // Check if token is in database and not revoked
+        const [storedToken] = await db
+          .select()
+          .from(refreshTokens)
+          .where(
+            and(
+              eq(refreshTokens.token, refreshToken),
+              isNull(refreshTokens.revokedAt)
+            )
+          )
+          .limit(1);
+
+        if (!storedToken) {
+          return c.json({
+            success: false,
+            message: 'Refresh token has been revoked or is invalid'
+          }, 401);
+        }
+
         const newAccessToken = generateAccessToken({
           adminId: payload.adminId,
           username: payload.username,
@@ -47,6 +67,20 @@ const authRoutes = new Hono()
           adminId: payload.adminId,
           username: payload.username,
           email: payload.email
+        });
+
+        // Revoke old token and store new one
+        db.transaction((tx) => {
+          tx.update(refreshTokens)
+            .set({ revokedAt: new Date() })
+            .where(eq(refreshTokens.id, storedToken.id))
+            .run();
+
+          tx.insert(refreshTokens).values({
+            adminId: payload.adminId,
+            token: newRefreshToken,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          }).run();
         });
 
         return c.json({
@@ -67,18 +101,27 @@ const authRoutes = new Hono()
   )
   /**
    * POST /api/admin/logout
-   * Log out the current user (placeholder for token invalidation)
+   * Log out the current user by revoking the refresh token
    */
   .post(
     '/logout',
     async (c) => {
       try {
-        // In a real implementation, you would blacklist the refresh token here
+        const { refreshToken } = await c.req.json();
+        
+        if (refreshToken) {
+          await db
+            .update(refreshTokens)
+            .set({ revokedAt: new Date() })
+            .where(eq(refreshTokens.token, refreshToken));
+        }
+
         return c.json({
           success: true,
           message: 'Logged out successfully'
         });
       } catch (error) {
+        console.error('Logout error:', error);
         return c.json({
           success: false,
           message: 'Logout failed'
@@ -88,18 +131,31 @@ const authRoutes = new Hono()
   )
   /**
    * POST /api/admin/logout-all
-   * Log out from all devices (placeholder for token invalidation)
+   * Log out from all devices by revoking all refresh tokens for the user
    */
   .post(
     '/logout-all',
+    authenticateAdmin,
     async (c) => {
       try {
-        // In a real implementation, you would invalidate all tokens for the user
+        const admin = (c as any).get('admin');
+        
+        await db
+          .update(refreshTokens)
+          .set({ revokedAt: new Date() })
+          .where(
+            and(
+              eq(refreshTokens.adminId, admin.id),
+              isNull(refreshTokens.revokedAt)
+            )
+          );
+
         return c.json({
           success: true,
           message: 'Logged out from all devices successfully'
         });
       } catch (error) {
+        console.error('Logout all error:', error);
         return c.json({
           success: false,
           message: 'Logout all failed'
@@ -157,7 +213,14 @@ const authRoutes = new Hono()
         const accessToken = generateAccessToken(payload, '24h');
         const refreshToken = generateRefreshToken(payload, '7d');
 
-        // 4. Update lastLoginAt
+        // 4. Store refresh token in DB
+        await db.insert(refreshTokens).values({
+          adminId: admin.id,
+          token: refreshToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        });
+
+        // 5. Update lastLoginAt
         await db
           .update(adminUsers)
           .set({ lastLoginAt: new Date() })

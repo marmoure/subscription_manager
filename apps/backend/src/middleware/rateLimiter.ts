@@ -3,6 +3,13 @@ import type { Context, Next } from 'hono';
 // In-memory rate limit store: Map<ip, { count: number, resetAt: number }>
 const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
 
+/**
+ * Resets the rate limit for all IPs. Primarily for testing.
+ */
+export const resetRateLimit = () => {
+  rateLimitMap.clear();
+};
+
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes window
 const MAX_REQUESTS_PER_WINDOW = 5; // Updated to 5 as per verification task
 

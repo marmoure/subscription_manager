@@ -69,6 +69,17 @@ export const adminUsers = sqliteTable('admin_users', {
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 });
 
+export const refreshTokens = sqliteTable('refresh_tokens', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  adminId: integer('admin_id').notNull().references(() => adminUsers.id),
+  token: text('token').unique().notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  revokedAt: integer('revoked_at', { mode: 'timestamp' }),
+}, (table) => ({
+  tokenIdx: uniqueIndex('token_idx').on(table.token),
+  adminIdIdx: index('refresh_token_admin_id_idx').on(table.adminId),
+}));
+
 export const verificationLogs = sqliteTable('verification_logs', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   licenseKeyId: integer('license_key_id').notNull().references(() => licenseKeys.id),
