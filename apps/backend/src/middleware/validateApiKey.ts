@@ -2,6 +2,7 @@ import { Context, Next } from 'hono';
 import { db } from '../db/db';
 import { apiKeys } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
+import { getConnInfo } from '@hono/node-server/conninfo';
 
 export type ApiKeyVariables = {
   apiKeyInfo: {
@@ -122,12 +123,16 @@ export const validateApiKey = async (c: Context<{ Variables: ApiKeyVariables }>,
     }
   }
 
-  // 4. Asynchronous Update (Last Used & Usage Count)
+  // 4. Asynchronous Update (Last Used, Usage Count & IP Address)
   // We don't await this to keep the request fast
+  const info = getConnInfo(c);
+  const ipAddress = info.remote.address;
+
   db.update(apiKeys)
     .set({
       lastUsedAt: new Date(),
-      usageCount: sql`${apiKeys.usageCount} + 1`
+      usageCount: sql`${apiKeys.usageCount} + 1`,
+      lastIpAddress: ipAddress
     })
     .where(eq(apiKeys.key, apiKey))
     .execute()

@@ -48,6 +48,7 @@ export const apiKeys = sqliteTable('api_keys', {
   name: text('name'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
   lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+  lastIpAddress: text('last_ip_address'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   usageCount: integer('usage_count').notNull().default(0),
 }, (table) => ({

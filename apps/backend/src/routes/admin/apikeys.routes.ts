@@ -3,18 +3,58 @@ import { db } from '../../db/db';
 import { apiKeys } from '../../db/schema';
 import { authenticateAdmin, type AdminVariables } from '../../middleware/authenticateAdmin';
 import { zValidator } from '../../middleware/validator';
-import { createApiKeySchema, type CreateApiKeyInput } from '../../schemas/api-key.schema';
+import { 
+  createApiKeySchema, 
+  listApiKeysQuerySchema,
+  type CreateApiKeyInput,
+  type ListApiKeysQueryInput 
+} from '../../schemas/api-key.schema';
+import { ApiKeyService } from '../../services/api-key.service';
 import { generateApiKey } from '../../utils/apiKeyGenerator';
 import { sql, eq } from 'drizzle-orm';
 
 const adminApiKeyRoutes = new Hono<{ Variables: AdminVariables }>();
+
+/**
+ * GET /api/admin/api-keys
+ * Fetches all API keys with pagination, filtering and search.
+ * Requires admin authentication.
+ */
+adminApiKeyRoutes.get(
+  '/api-keys',
+  authenticateAdmin,
+  zValidator('query', listApiKeysQuerySchema),
+  async (c) => {
+    const { page, limit, isActive, search } = (c as any).get('validated') as ListApiKeysQueryInput;
+
+    try {
+      const result = await ApiKeyService.getAllApiKeys({
+        page,
+        limit,
+        isActive,
+        search,
+      });
+
+      return c.json({
+        success: true,
+        ...result
+      }, 200);
+    } catch (error) {
+      console.error('Error in fetch all API keys route:', error);
+      return c.json({
+        success: false,
+        message: 'Internal server error while fetching API keys'
+      }, 500);
+    }
+  }
+);
 
 adminApiKeyRoutes.post(
   '/api-keys',
   authenticateAdmin,
   zValidator('json', createApiKeySchema),
   async (c) => {
-    const { name } = c.get('validated') as CreateApiKeyInput;
+    const { name } = (c as any).get('validated') as CreateApiKeyInput;
     const admin = c.get('admin');
 
     try {
