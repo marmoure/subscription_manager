@@ -30,15 +30,6 @@ const routes = app
 
 export type AppType = typeof routes
 
-// Example of a route protected by API Key
-app.get('/api/v1/software/verify', validateApiKey, (c) => {
-  return c.json({
-    success: true,
-    message: 'API Key is valid',
-    timestamp: new Date().toISOString()
-  });
-})
-
 const port = config.PORT
 
 if (process.env.NODE_ENV !== 'test') {

@@ -16,6 +16,7 @@ interface ApiKeyCache {
   lastUsedAt: Date | null;
   isActive: boolean;
   usageCount: number;
+  expiresAt: number;
 }
 
 // In-memory cache for valid API keys
@@ -59,6 +60,14 @@ export const validateApiKey = async (c: Context<{ Variables: ApiKeyVariables }>,
     }, 401);
   }
 
+  // Security: Limit API key length to prevent DoS attacks with extremely long headers
+  if (apiKey.length > 256) {
+    return c.json({ 
+      success: false, 
+      message: 'Unauthorized: Invalid API Key format' 
+    }, 401);
+  }
+
   // 1. Rate Limiting Check
   const now = Date.now();
   let rateLimit = rateLimitMap.get(apiKey);
@@ -93,6 +102,11 @@ export const validateApiKey = async (c: Context<{ Variables: ApiKeyVariables }>,
   // 2. Cache Check
   let keyData = apiKeyCache.get(apiKey);
 
+  if (keyData && Date.now() > keyData.expiresAt) {
+    apiKeyCache.delete(apiKey);
+    keyData = undefined;
+  }
+
   if (!keyData) {
     // 3. Database Validation
     try {
@@ -101,17 +115,10 @@ export const validateApiKey = async (c: Context<{ Variables: ApiKeyVariables }>,
         .where(eq(apiKeys.key, apiKey))
         .limit(1);
 
-      if (!dbKey) {
+      if (!dbKey || !dbKey.isActive) {
         return c.json({ 
           success: false, 
-          message: 'Unauthorized: Invalid API Key' 
-        }, 401);
-      }
-
-      if (!dbKey.isActive) {
-        return c.json({ 
-          success: false, 
-          message: 'Unauthorized: API Key is inactive' 
+          message: 'Unauthorized: Invalid or inactive API Key' 
         }, 401);
       }
 
@@ -119,16 +126,12 @@ export const validateApiKey = async (c: Context<{ Variables: ApiKeyVariables }>,
         id: dbKey.id,
         lastUsedAt: dbKey.lastUsedAt,
         isActive: !!dbKey.isActive,
-        usageCount: dbKey.usageCount
+        usageCount: dbKey.usageCount,
+        expiresAt: Date.now() + CACHE_TTL
       };
 
       // Add to cache
       apiKeyCache.set(apiKey, keyData);
-      
-      // Auto-invalidate cache entry after TTL
-      setTimeout(() => {
-        apiKeyCache.delete(apiKey!);
-      }, CACHE_TTL);
 
     } catch (error) {
       console.error('Database error during API key validation:', error);
