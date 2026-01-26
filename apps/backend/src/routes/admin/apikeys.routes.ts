@@ -6,8 +6,10 @@ import { zValidator } from '../../middleware/validator';
 import { 
   createApiKeySchema, 
   listApiKeysQuerySchema,
+  revokeApiKeySchema,
   type CreateApiKeyInput,
-  type ListApiKeysQueryInput 
+  type ListApiKeysQueryInput,
+  type RevokeApiKeyInput
 } from '../../schemas/api-key.schema';
 import { ApiKeyService } from '../../services/api-key.service';
 import { generateApiKey } from '../../utils/apiKeyGenerator';
@@ -101,6 +103,45 @@ adminApiKeyRoutes.post(
       return c.json({
         success: false,
         message: 'Internal server error'
+      }, 500);
+    }
+  }
+);
+
+/**
+ * DELETE /api/admin/api-keys/:id
+ * Revokes an API key.
+ * Requires admin authentication.
+ */
+adminApiKeyRoutes.delete(
+  '/api-keys/:id',
+  authenticateAdmin,
+  zValidator('json', revokeApiKeySchema),
+  async (c) => {
+    const id = parseInt(c.req.param('id'));
+    const { reason } = (c as any).get('validated') as RevokeApiKeyInput;
+    const admin = c.get('admin');
+
+    if (isNaN(id)) {
+      return c.json({
+        success: false,
+        message: 'Invalid API key ID'
+      }, 400);
+    }
+
+    try {
+      const result = await ApiKeyService.revokeApiKey(id, admin.id, reason);
+
+      if (!result.success) {
+        return c.json(result, (result.status as any) || 400);
+      }
+
+      return c.json(result, 200);
+    } catch (error) {
+      console.error(`Error in revoke API key route (ID: ${id}):`, error);
+      return c.json({
+        success: false,
+        message: 'Internal server error while revoking API key'
       }, 500);
     }
   }

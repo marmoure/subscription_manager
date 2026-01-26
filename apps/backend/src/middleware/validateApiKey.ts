@@ -22,6 +22,18 @@ interface ApiKeyCache {
 const apiKeyCache = new Map<string, ApiKeyCache>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * Clears the API key cache. If a key is provided, only that key is cleared.
+ * @param apiKey Optional API key to clear from cache
+ */
+export const clearApiKeyCache = (apiKey?: string) => {
+  if (apiKey) {
+    apiKeyCache.delete(apiKey);
+  } else {
+    apiKeyCache.clear();
+  }
+};
+
 // Rate limiting: Map<apiKey, { count: number, resetAt: number }>
 const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute window

@@ -83,6 +83,31 @@ export interface LicenseDataItem {
   };
 }
 
+export interface ApiKeyDataItem {
+  id: number;
+  name: string;
+  maskedKey: string;
+  createdAt: string | Date;
+  lastUsedAt: string | Date | null;
+  isActive: boolean;
+  usageCount: number;
+  metadata: {
+    totalApiCalls: number;
+    lastIpAddress: string | null;
+  };
+}
+
+export interface ApiKeyListResponse {
+  success: boolean;
+  data: ApiKeyDataItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export const getLicenses = async (
   page: number = 1,
   limit: number = 20,
@@ -120,6 +145,61 @@ export const getLicenseDetails = async (id: number): Promise<LicenseDataItem> =>
 
   const result = await response.json();
   return result as any;
+};
+
+export const getApiKeys = async (
+  page: number = 1,
+  limit: number = 20,
+  isActive?: string,
+  search?: string
+): Promise<ApiKeyListResponse> => {
+  const query: Record<string, string> = {
+    page: page.toString(),
+    limit: limit.toString(),
+  };
+  
+  if (isActive) query.isActive = isActive;
+  if (search) query.search = search;
+
+  const response = await (client.api.admin['api-keys'].$get as any)({ query });
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to fetch API keys', errorData);
+  }
+
+  const result = await response.json();
+  return result as unknown as ApiKeyListResponse;
+};
+
+export const createApiKey = async (name: string): Promise<any> => {
+  const response = await (client.api.admin['api-keys'].$post as any)({
+    json: { name }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to create API key', errorData);
+  }
+
+  return await response.json();
+};
+
+export const revokeApiKey = async (
+  id: number,
+  reason?: string
+): Promise<any> => {
+  const response = await (client.api.admin['api-keys'][':id'].$delete as any)({
+    param: { id: id.toString() },
+    json: { reason }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json() as any;
+    throw new ApiError(errorData.message || 'Failed to revoke API key', errorData);
+  }
+
+  return await response.json();
 };
 
 export const getSubmissions = async (
@@ -230,5 +310,3 @@ export const getDashboardStats = async (): Promise<DashboardStatsResponse> => {
   const result = await response.json();
   return result as any;
 };
-
-

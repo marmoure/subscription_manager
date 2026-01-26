@@ -51,6 +51,9 @@ export const apiKeys = sqliteTable('api_keys', {
   lastIpAddress: text('last_ip_address'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   usageCount: integer('usage_count').notNull().default(0),
+  revokedAt: integer('revoked_at', { mode: 'timestamp' }),
+  revokedBy: integer('revoked_by').references(() => adminUsers.id),
+  revocationReason: text('revocation_reason'),
 }, (table) => ({
   keyIdx: index('key_idx').on(table.key),
 }));

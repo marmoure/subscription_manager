@@ -17,6 +17,11 @@ export const listApiKeysQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+export const revokeApiKeySchema = z.object({
+  reason: z.string().max(500, 'Reason is too long').optional(),
+});
+
 export type ApiKey = z.infer<typeof apiKeySchema>;
 export type CreateApiKeyInput = z.infer<typeof createApiKeySchema>;
 export type ListApiKeysQueryInput = z.infer<typeof listApiKeysQuerySchema>;
+export type RevokeApiKeyInput = z.infer<typeof revokeApiKeySchema>;
