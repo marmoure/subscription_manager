@@ -19,7 +19,7 @@ export const licenseKeys = sqliteTable('license_keys', {
   revokedAt: integer('revoked_at', { mode: 'timestamp' }),
 }, (table) => ({
   licenseKeyIdx: uniqueIndex('license_key_idx').on(table.licenseKey),
-  machineIdIdx: index('machine_id_idx').on(table.machineId),
+  machineIdIdx: uniqueIndex('machine_id_idx').on(table.machineId),
 }));
 
 export const userSubmissions = sqliteTable('user_submissions', {
