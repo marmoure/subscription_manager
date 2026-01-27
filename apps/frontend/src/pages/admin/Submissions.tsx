@@ -32,10 +32,10 @@ const Submissions: React.FC = () => {
   const [submissions, setSubmissions] = useState<SubmissionDataItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   const initialLimit = parseInt(searchParams.get('limit') || '20', 10);
-  
+
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(initialLimit);
   const [totalPages, setTotalPages] = useState(1);
@@ -65,8 +65,8 @@ const Submissions: React.FC = () => {
     setError(null);
     try {
       const response = await getSubmissions(
-        page, 
-        pageSize, 
+        page,
+        pageSize,
         debouncedFilters.search || undefined,
         debouncedFilters.startDate || undefined,
         debouncedFilters.endDate || undefined,
@@ -89,7 +89,7 @@ const Submissions: React.FC = () => {
 
   useEffect(() => {
     fetchSubmissions();
-    
+
     const params: any = { page: page.toString() };
     if (pageSize !== 20) params.limit = pageSize.toString();
     if (filters.search) params.q = filters.search;
@@ -97,7 +97,7 @@ const Submissions: React.FC = () => {
     if (filters.endDate) params.endDate = filters.endDate;
     if (filters.minCashiers) params.minCashiers = filters.minCashiers;
     if (filters.maxCashiers) params.maxCashiers = filters.maxCashiers;
-    
+
     setSearchParams(params, { replace: true });
   }, [page, pageSize, debouncedFilters, fetchSubmissions, setSearchParams]);
 
@@ -146,7 +146,7 @@ const Submissions: React.FC = () => {
 
   const getStatusBadge = (status: string | undefined) => {
     if (!status) return <Badge variant="outline" className="opacity-50">Pending</Badge>;
-    
+
     switch (status) {
       case 'active':
         return <Badge variant="success">Active</Badge>;
@@ -185,10 +185,10 @@ const Submissions: React.FC = () => {
 
         <Card>
           <CardHeader className="pb-4">
-            <FilterPanel 
-              filters={filters} 
-              onFilterChange={handleFilterChange} 
-              onClearAll={handleClearFilters} 
+            <FilterPanel
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearAll={handleClearFilters}
             />
           </CardHeader>
           <CardContent>
@@ -243,8 +243,8 @@ const Submissions: React.FC = () => {
                     </TableRow>
                   ) : (
                     submissions.map((submission) => (
-                      <TableRow 
-                        key={submission.id} 
+                      <TableRow
+                        key={submission.id}
                         className="cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/50"
                         onClick={() => showLicenseDetails(submission)}
                       >
@@ -256,8 +256,7 @@ const Submissions: React.FC = () => {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className="flex flex-col">
-                            <span className="text-xs font-medium">{submission.email}</span>
-                            <span className="text-[10px] text-muted-foreground">{formatPhoneNumber(submission.phone)}</span>
+                            <span className="text-xs font-medium">{formatPhoneNumber(submission.phone)}</span>
                           </div>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
@@ -281,18 +280,18 @@ const Submissions: React.FC = () => {
                         </TableCell>
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               title="View Details"
                               onClick={() => showLicenseDetails(submission)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
                             {submission.licenseKey && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 title="Go to License"
                                 asChild
                               >

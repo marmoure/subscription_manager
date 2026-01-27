@@ -41,7 +41,6 @@ export function LicenseRequestForm() {
       machineId: "",
       phone: "",
       shopName: "",
-      email: "",
       numberOfCashiers: 1,
       captchaToken: "",
       website: "",
@@ -194,26 +193,6 @@ export function LicenseRequestForm() {
                     <FormControl>
                       <Input
                         placeholder="My Awesome Shop"
-                        {...field}
-                        className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="john@example.com"
-                        type="email"
                         {...field}
                         className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}

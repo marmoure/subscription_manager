@@ -32,7 +32,7 @@ const Login = () => {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      usernameOrEmail: '',
+      username: '',
       password: '',
     },
   });
@@ -46,12 +46,12 @@ const Login = () => {
         login(data.accessToken, data.refreshToken, data.admin);
         navigate('/admin');
       } else {
-         setError('Login failed. Please check your credentials.');
+        setError('Login failed. Please check your credentials.');
       }
     } catch (err: any) {
       const handled = handleError(err);
       setError(handled.message);
-      
+
       // If we have validation errors from the backend, we can set them in the form
       if (handled.fieldErrors) {
         Object.entries(handled.fieldErrors).forEach(([field, messages]) => {
@@ -70,12 +70,12 @@ const Login = () => {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-                {/* Brand Logo Placeholder */}
-                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-                     <Lock className="h-6 w-6 text-primary-foreground" />
-                </div>
+          <div className="flex justify-center mb-4">
+            {/* Brand Logo Placeholder */}
+            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+              <Lock className="h-6 w-6 text-primary-foreground" />
             </div>
+          </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Admin Login</CardTitle>
           <CardDescription>
             Enter your credentials to access the admin dashboard
@@ -85,18 +85,18 @@ const Login = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <ErrorMessage error={error} onDismiss={() => setError(null)} />
-              
+
               <FormField
                 control={form.control}
-                name="usernameOrEmail"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username or Email</FormLabel>
+                    <FormLabel>Username</FormLabel>
                     <FormControl>
-                        <div className="relative">
-                            <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="admin@example.com" className="pl-10" {...field} />
-                        </div>
+                      <div className="relative">
+                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="admin" className="pl-10" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -143,12 +143,12 @@ const Login = () => {
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                    </>
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
                 ) : (
-                    'Sign in'
+                  'Sign in'
                 )}
               </Button>
             </form>

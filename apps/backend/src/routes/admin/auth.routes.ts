@@ -59,14 +59,12 @@ const authRoutes = new Hono()
 
         const newAccessToken = generateAccessToken({
           adminId: payload.adminId,
-          username: payload.username,
-          email: payload.email
+          username: payload.username
         });
 
         const newRefreshToken = generateRefreshToken({
           adminId: payload.adminId,
-          username: payload.username,
-          email: payload.email
+          username: payload.username
         });
 
         // Revoke old token and store new one
@@ -108,7 +106,7 @@ const authRoutes = new Hono()
     async (c) => {
       try {
         const { refreshToken } = await c.req.json();
-        
+
         if (refreshToken) {
           await db
             .update(refreshTokens)
@@ -139,7 +137,7 @@ const authRoutes = new Hono()
     async (c) => {
       try {
         const admin = (c as any).get('admin');
-        
+
         await db
           .update(refreshTokens)
           .set({ revokedAt: new Date() })
@@ -173,25 +171,20 @@ const authRoutes = new Hono()
     zValidator('json', loginAdminSchema),
     async (c) => {
       try {
-        const { usernameOrEmail, password } = (c as any).get('validated') as LoginAdminInput;
+        const { username, password } = (c as any).get('validated') as LoginAdminInput;
 
-        // 1. Find user by username or email
+        // 1. Find user by username
         const [admin] = await db
           .select()
           .from(adminUsers)
-          .where(
-            or(
-              eq(adminUsers.username, usernameOrEmail),
-              eq(adminUsers.email, usernameOrEmail)
-            )
-          )
+          .where(eq(adminUsers.username, username))
           .limit(1);
 
-        // 2. Validate user and password (don't reveal if user doesn't exist)
+        // 2. Validate user and password
         if (!admin || !admin.isActive) {
           return c.json({
             success: false,
-            message: 'Invalid username/email or password'
+            message: 'Invalid username or password'
           }, 401);
         }
 
@@ -199,7 +192,7 @@ const authRoutes = new Hono()
         if (!isPasswordValid) {
           return c.json({
             success: false,
-            message: 'Invalid username/email or password'
+            message: 'Invalid username or password'
           }, 401);
         }
 
@@ -207,7 +200,6 @@ const authRoutes = new Hono()
         const payload = {
           adminId: admin.id,
           username: admin.username,
-          email: admin.email,
         };
 
         const accessToken = generateAccessToken(payload, '24h');
@@ -234,7 +226,6 @@ const authRoutes = new Hono()
             admin: {
               id: admin.id,
               username: admin.username,
-              email: admin.email,
               role: admin.role
             }
           }
@@ -260,7 +251,7 @@ const authRoutes = new Hono()
       try {
         // 1. Check if any admin users exist
         const [adminCount] = await db.select({ count: sql<number>`count(*)` }).from(adminUsers);
-        
+
         if (adminCount.count > 0) {
           return c.json({
             success: false,
@@ -268,7 +259,7 @@ const authRoutes = new Hono()
           }, 403);
         }
 
-        const { username, email, password } = (c as any).get('validated') as RegisterAdminInput;
+        const { username, password } = (c as any).get('validated') as RegisterAdminInput;
 
         // 2. Hash the password
         const hashedPassword = await hashPassword(password);
@@ -276,7 +267,6 @@ const authRoutes = new Hono()
         // 3. Create the admin user
         await db.insert(adminUsers).values({
           username,
-          email,
           hashedPassword,
         });
 

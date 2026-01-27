@@ -4,7 +4,6 @@ import { sql, type InferSelectModel, type InferInsertModel, relations } from 'dr
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
-  email: text('email').unique().notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
 });
 
@@ -28,14 +27,12 @@ export const userSubmissions = sqliteTable('user_submissions', {
   machineId: text('machine_id').notNull(),
   phone: text('phone').notNull(),
   shopName: text('shop_name').notNull(),
-  email: text('email').notNull(),
   numberOfCashiers: integer('number_of_cashiers').notNull(),
   submissionDate: integer('submission_date', { mode: 'timestamp' }).notNull().default(new Date()),
   ipAddress: text('ip_address'),
   licenseKeyId: integer('license_key_id').references(() => licenseKeys.id),
 }, (table) => ({
   nameIdx: index('submission_name_idx').on(table.name),
-  emailIdx: index('submission_email_idx').on(table.email),
   shopNameIdx: index('submission_shop_name_idx').on(table.shopName),
   machineIdIdx: index('submission_machine_id_idx').on(table.machineId),
   submissionDateIdx: index('submission_date_idx').on(table.submissionDate),
@@ -62,7 +59,6 @@ export const adminUsers = sqliteTable('admin_users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   username: text('username').unique().notNull(),
   hashedPassword: text('hashed_password').notNull(),
-  email: text('email').unique().notNull(),
   role: text('role', { enum: ['admin', 'super-admin'] }).notNull().default('admin'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
   lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),

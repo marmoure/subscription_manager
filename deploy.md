@@ -111,14 +111,6 @@ PORT=3000
 NODE_ENV=production
 CORS_ORIGIN=https://yourdomain.com
 
-# Email (SMTP)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=noreply@yourdomain.com
-
 # Google reCAPTCHA
 RECAPTCHA_SITE_KEY=your-recaptcha-site-key
 RECAPTCHA_SECRET_KEY=your-recaptcha-secret-key

@@ -43,7 +43,7 @@ const LicenseDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedMachineId, setCopiedMachineId] = useState(false);
-  
+
   // Status change states
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<'active' | 'inactive' | 'revoked' | null>(null);
@@ -96,7 +96,7 @@ const LicenseDetail: React.FC = () => {
 
   const handleStatusUpdate = async (reason: string) => {
     if (!license || !pendingStatus) return;
-    
+
     const oldStatus = license.status as 'active' | 'inactive';
     setIsUpdating(true);
     try {
@@ -126,7 +126,7 @@ const LicenseDetail: React.FC = () => {
 
   const handleUndo = async () => {
     if (!license || !previousStatus) return;
-    
+
     setIsUpdating(true);
     try {
       await updateLicenseStatus(license.id, previousStatus, 'Undo previous status change');
@@ -240,9 +240,9 @@ const LicenseDetail: React.FC = () => {
               </div>
             </div>
             {previousStatus && (
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleUndo}
                 disabled={isUpdating}
                 className="ml-4 bg-white dark:bg-slate-950"
@@ -276,15 +276,6 @@ const LicenseDetail: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => alert('Email resending feature coming soon!')}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Resend Email
-            </Button>
-            
             {license && license.status !== 'revoked' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -295,7 +286,7 @@ const LicenseDetail: React.FC = () => {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>License Status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     disabled={license.status === 'active'}
                     onClick={() => openStatusConfirm('active')}
                     className="text-green-600 focus:text-green-600"
@@ -303,7 +294,7 @@ const LicenseDetail: React.FC = () => {
                     <CheckCircle className="mr-2 h-4 w-4" />
                     Activate
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     disabled={license.status === 'inactive'}
                     onClick={() => openStatusConfirm('inactive')}
                     className="text-amber-600 focus:text-amber-600"
@@ -312,7 +303,7 @@ const LicenseDetail: React.FC = () => {
                     Deactivate
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => openStatusConfirm('revoked')}
                     className="text-red-600 focus:text-red-600 font-medium"
                   >
@@ -341,10 +332,10 @@ const LicenseDetail: React.FC = () => {
                     <span className="text-xs font-medium text-muted-foreground uppercase">License Key</span>
                     <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 p-2 rounded border">
                       <code className="text-sm font-mono flex-1 truncate">{license.licenseKey}</code>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => handleCopy(license.licenseKey, setCopiedKey)}
                       >
                         {copiedKey ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
@@ -356,10 +347,10 @@ const LicenseDetail: React.FC = () => {
                     <span className="text-xs font-medium text-muted-foreground uppercase">Machine ID</span>
                     <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 p-2 rounded border">
                       <code className="text-sm font-mono flex-1 truncate">{license.machineId}</code>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => handleCopy(license.machineId, setCopiedMachineId)}
                       >
                         {copiedMachineId ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
@@ -405,15 +396,6 @@ const LicenseDetail: React.FC = () => {
                         <div className="col-span-2">
                           <span className="text-xs font-medium text-muted-foreground uppercase">Full Name</span>
                           <p className="text-sm font-semibold">{license.submission.name}</p>
-                        </div>
-                        <div>
-                          <span className="text-xs font-medium text-muted-foreground uppercase">Email Address</span>
-                          <p className="text-sm flex items-center gap-1">
-                            {license.submission.email}
-                            <Link to={`mailto:${license.submission.email}`} className="text-primary">
-                              <ExternalLink className="h-3 w-3" />
-                            </Link>
-                          </p>
                         </div>
                         <div>
                           <span className="text-xs font-medium text-muted-foreground uppercase">Phone Number</span>

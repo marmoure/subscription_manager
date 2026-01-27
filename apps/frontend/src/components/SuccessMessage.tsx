@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 
 interface SuccessMessageProps {
   licenseKey: string;
-  email: string;
 }
 
-export function SuccessMessage({ licenseKey, email }: SuccessMessageProps) {
+export function SuccessMessage({ licenseKey }: SuccessMessageProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
@@ -22,7 +21,7 @@ export function SuccessMessage({ licenseKey, email }: SuccessMessageProps) {
   };
 
   return (
-    <Alert 
+    <Alert
       className="border-green-500 bg-green-50 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-100 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
       <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -57,7 +56,7 @@ export function SuccessMessage({ licenseKey, email }: SuccessMessageProps) {
         </div>
 
         <p className="text-sm text-green-700 dark:text-green-400">
-          A copy of this license has been sent to <span className="font-medium">{email}</span>.
+          Please save this license key in a safe place.
         </p>
       </AlertDescription>
     </Alert>

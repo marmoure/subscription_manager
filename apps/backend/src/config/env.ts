@@ -35,27 +35,6 @@ const envSchema = z.object({
     .url('CORS_ORIGIN must be a valid URL')
     .default('http://localhost:3000'),
 
-  // SMTP Configuration (for sending emails)
-  SMTP_HOST: z.string().min(1, 'SMTP_HOST is required'),
-
-  SMTP_PORT: z
-    .string()
-    .default('587')
-    .transform((val) => parseInt(val, 10))
-    .pipe(z.number().int().positive().max(65535, 'SMTP_PORT must be between 1 and 65535')),
-
-  SMTP_SECURE: z
-    .string()
-    .default('false')
-    .transform((val) => val === 'true')
-    .pipe(z.boolean()),
-
-  SMTP_USER: z.string().email('SMTP_USER must be a valid email address'),
-
-  SMTP_PASS: z.string().min(1, 'SMTP_PASS is required'),
-
-  SMTP_FROM: z.string().email('SMTP_FROM must be a valid email address'),
-
   // CAPTCHA Configuration (Google reCAPTCHA)
   RECAPTCHA_SITE_KEY: z.string().min(1, 'RECAPTCHA_SITE_KEY is required'),
 

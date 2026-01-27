@@ -183,14 +183,6 @@ PORT=3000
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
 
-# Email (SMTP)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=noreply@yourdomain.com
-
 # Google reCAPTCHA
 RECAPTCHA_SITE_KEY=your-recaptcha-site-key
 RECAPTCHA_SECRET_KEY=your-recaptcha-secret-key
@@ -233,14 +225,6 @@ This will:
 3. Add your domains (localhost for development)
 4. Copy the Site Key and Secret Key to your `.env` files
 
-### SMTP Configuration
-
-For email functionality, configure your SMTP settings:
-
-**Gmail Example:**
-1. Enable 2-factor authentication on your Google account
-2. Generate an App Password: Account Settings → Security → App Passwords
-3. Use the app password in `SMTP_PASS`
 
 ## 🎯 Usage
 
@@ -311,7 +295,6 @@ Content-Type: application/json
 
 {
   "name": "John Doe",
-  "email": "john@example.com",
   "phone": "+1234567890",
   "shopName": "My Shop",
   "machineId": "MACHINE-123",
