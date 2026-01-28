@@ -7,9 +7,9 @@ export class DashboardService {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    
+
     const [totalLicensesRes] = await db.select({ count: sql<number>`count(*)` }).from(licenseKeys);
-    
+
     const [activeLicensesRes] = await db.select({ count: sql<number>`count(*)` }).from(licenseKeys).where(eq(licenseKeys.status, 'active'));
 
     const [submissionsThisMonthRes] = await db.select({ count: sql<number>`count(*)` })
@@ -22,7 +22,7 @@ export class DashboardService {
 
     const currentCount = submissionsThisMonthRes?.count || 0;
     const lastMonthCount = submissionsLastMonthRes?.count || 0;
-    
+
     let growth = 0;
     if (lastMonthCount === 0) {
       growth = currentCount > 0 ? 100 : 0;
@@ -48,28 +48,28 @@ export class DashboardService {
       date: sql<string>`date(${licenseKeys.createdAt} / 1000, 'unixepoch')`,
       count: sql<number>`count(*)`,
     })
-    .from(licenseKeys)
-    .where(gte(licenseKeys.createdAt, startDate))
-    .groupBy(sql`date(${licenseKeys.createdAt} / 1000, 'unixepoch')`)
-    .orderBy(sql`date(${licenseKeys.createdAt} / 1000, 'unixepoch')`);
+      .from(licenseKeys)
+      .where(gte(licenseKeys.createdAt, startDate))
+      .groupBy(sql`date(${licenseKeys.createdAt} / 1000, 'unixepoch')`)
+      .orderBy(sql`date(${licenseKeys.createdAt} / 1000, 'unixepoch')`);
 
     // Pie chart: License status distribution
     const licenseStatus = await db.select({
       status: licenseKeys.status,
       count: sql<number>`count(*)`,
     })
-    .from(licenseKeys)
-    .groupBy(licenseKeys.status);
+      .from(licenseKeys)
+      .groupBy(licenseKeys.status);
 
     // Bar chart: Submissions by day
     const submissionsByDay = await db.select({
       date: sql<string>`date(${userSubmissions.submissionDate} / 1000, 'unixepoch')`,
       count: sql<number>`count(*)`,
     })
-    .from(userSubmissions)
-    .where(gte(userSubmissions.submissionDate, startDate))
-    .groupBy(sql`date(${userSubmissions.submissionDate} / 1000, 'unixepoch')`)
-    .orderBy(sql`date(${userSubmissions.submissionDate} / 1000, 'unixepoch')`);
+      .from(userSubmissions)
+      .where(gte(userSubmissions.submissionDate, startDate))
+      .groupBy(sql`date(${userSubmissions.submissionDate} / 1000, 'unixepoch')`)
+      .orderBy(sql`date(${userSubmissions.submissionDate} / 1000, 'unixepoch')`);
 
     return {
       licensesOverTime,
@@ -80,11 +80,10 @@ export class DashboardService {
 
   static async getRecentActivity(limit: number = 10) {
     const recentSubmissions = await db.select({
-        id: userSubmissions.id,
-        name: userSubmissions.name,
-        email: userSubmissions.email,
-        submissionDate: userSubmissions.submissionDate,
-        shopName: userSubmissions.shopName,
+      id: userSubmissions.id,
+      name: userSubmissions.name,
+      submissionDate: userSubmissions.submissionDate,
+      shopName: userSubmissions.shopName,
     })
       .from(userSubmissions)
       .orderBy(desc(userSubmissions.submissionDate))
@@ -98,11 +97,11 @@ export class DashboardService {
       adminUsername: adminUsers.username,
       licenseKey: licenseKeys.licenseKey,
     })
-    .from(licenseStatusLogs)
-    .leftJoin(adminUsers, eq(licenseStatusLogs.adminId, adminUsers.id))
-    .leftJoin(licenseKeys, eq(licenseStatusLogs.licenseKeyId, licenseKeys.id))
-    .orderBy(desc(licenseStatusLogs.timestamp))
-    .limit(limit);
+      .from(licenseStatusLogs)
+      .leftJoin(adminUsers, eq(licenseStatusLogs.adminId, adminUsers.id))
+      .leftJoin(licenseKeys, eq(licenseStatusLogs.licenseKeyId, licenseKeys.id))
+      .orderBy(desc(licenseStatusLogs.timestamp))
+      .limit(limit);
 
     return {
       recentSubmissions,

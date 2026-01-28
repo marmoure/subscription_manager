@@ -10,7 +10,6 @@ const refreshAccessTokenApi = async (refreshToken: string) => {
 export interface User {
   id: number;
   username: string;
-  email: string;
   role?: 'admin' | 'super-admin';
 }
 
@@ -19,7 +18,7 @@ interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
-  
+
   login: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
@@ -75,11 +74,11 @@ export const useAuthStore = create<AuthState>()(
           if (data && data.accessToken) {
             const { accessToken, refreshToken: newRefreshToken } = data;
             const validRefreshToken = newRefreshToken || refreshToken;
-            
+
             set({ accessToken, refreshToken: validRefreshToken });
           } else {
-             await get().logout();
-             throw new Error('Refresh failed');
+            await get().logout();
+            throw new Error('Refresh failed');
           }
         } catch (error) {
           await get().logout();
@@ -108,11 +107,11 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ 
-        accessToken: state.accessToken, 
-        refreshToken: state.refreshToken, 
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         user: state.user,
-        isAuthenticated: state.isAuthenticated 
+        isAuthenticated: state.isAuthenticated
       }),
     }
   )

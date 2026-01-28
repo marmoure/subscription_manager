@@ -19,8 +19,8 @@ const SUPPORT_EMAIL = "support@vibe-kanban.com";
 export function ErrorMessage({ error, onDismiss }: ErrorMessageProps) {
   if (!error) return null;
 
-  const errorObj: AppError = typeof error === 'string' 
-    ? { message: error, type: 'server' } 
+  const errorObj: AppError = typeof error === 'string'
+    ? { message: error, type: 'server' }
     : error;
 
   const { message, type = 'server', details, retryAfter } = errorObj;
@@ -78,7 +78,7 @@ export function ErrorMessage({ error, onDismiss }: ErrorMessageProps) {
           </div>
         )}
       </AlertDescription>
-      
+
       {onDismiss && (
         <Button
           variant="ghost"

@@ -46,7 +46,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           <Input
             id="search"
             name="search"
-            placeholder="Name, email, shop..."
+            placeholder="Name, shop..."
             value={filters.search}
             onChange={handleInputChange}
             className="h-9"
@@ -107,9 +107,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
         <div className="flex items-end">
           {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onClearAll}
               className="h-9 text-xs text-muted-foreground hover:text-foreground"
             >
@@ -133,10 +133,10 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           {(filters.startDate || filters.endDate) && (
             <Badge variant="secondary" className="gap-1 px-2 py-1">
               Date: {filters.startDate || '...'} to {filters.endDate || '...'}
-              <button 
+              <button
                 onClick={() => {
                   onFilterChange({ startDate: '', endDate: '' });
-                }} 
+                }}
                 className="hover:text-destructive"
               >
                 <X className="h-3 w-3" />
@@ -146,10 +146,10 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           {(filters.minCashiers || filters.maxCashiers) && (
             <Badge variant="secondary" className="gap-1 px-2 py-1">
               Cashiers: {filters.minCashiers || '0'} - {filters.maxCashiers || '∞'}
-              <button 
+              <button
                 onClick={() => {
                   onFilterChange({ minCashiers: '', maxCashiers: '' });
-                }} 
+                }}
                 className="hover:text-destructive"
               >
                 <X className="h-3 w-3" />

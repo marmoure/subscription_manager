@@ -114,7 +114,7 @@ try {
     console.log('  Role: super-admin');
 
     console.log('\n💡 Next steps:');
-    console.log('  1. Review apps/backend/.env and update SMTP/reCAPTCHA settings');
+    console.log('  1. Review apps/backend/.env and update reCAPTCHA settings');
     console.log('  2. Run "pnpm dev" to start development servers');
     console.log('  3. Access the backend at http://localhost:3000');
     console.log('  4. Access the frontend at http://localhost:5173');

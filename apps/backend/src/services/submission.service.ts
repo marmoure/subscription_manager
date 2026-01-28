@@ -18,27 +18,26 @@ export class SubmissionService {
     minCashiers?: number;
     maxCashiers?: number;
   }) {
-    const { 
-      page, 
-      limit, 
-      search, 
-      startDate, 
-      endDate, 
-      numberOfCashiers, 
-      minCashiers, 
-      maxCashiers 
+    const {
+      page,
+      limit,
+      search,
+      startDate,
+      endDate,
+      numberOfCashiers,
+      minCashiers,
+      maxCashiers
     } = options;
     const offset = (page - 1) * limit;
 
     try {
       const filters = [];
 
-      // Search in name, email, and shopName
+      // Search in name and shopName
       if (search) {
         const searchPattern = `%${search}%`;
         filters.push(or(
           like(userSubmissions.name, searchPattern),
-          like(userSubmissions.email, searchPattern),
           like(userSubmissions.shopName, searchPattern)
         ));
       }
@@ -80,7 +79,6 @@ export class SubmissionService {
         .select({
           id: userSubmissions.id,
           name: userSubmissions.name,
-          email: userSubmissions.email,
           phone: userSubmissions.phone,
           shopName: userSubmissions.shopName,
           machineId: userSubmissions.machineId,

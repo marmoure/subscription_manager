@@ -33,7 +33,6 @@ const publicRoutes = new Hono()
           machineId: validatedData.machineId,
           phone: validatedData.phone,
           shopName: validatedData.shopName,
-          email: validatedData.email,
           numberOfCashiers: validatedData.numberOfCashiers,
           ipAddress: ipAddress,
         });
@@ -50,7 +49,7 @@ const publicRoutes = new Hono()
 
       } catch (error: any) {
         console.error('Error processing license request:', error);
-        
+
         if (error.code === 'DUPLICATE_MACHINE_ID') {
           return c.json({
             success: false,

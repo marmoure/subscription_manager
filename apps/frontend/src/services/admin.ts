@@ -15,7 +15,6 @@ export interface LicenseListResponse {
 export interface SubmissionDataItem {
   id: number;
   name: string;
-  email: string;
   phone: string;
   shopName: string;
   machineId: string;
@@ -53,7 +52,6 @@ export interface LicenseDataItem {
   submission: {
     id: number;
     name: string;
-    email: string;
     phone: string;
     shopName: string;
     numberOfCashiers: number;
@@ -74,7 +72,6 @@ export interface LicenseDataItem {
     timestamp: string | Date;
     admin: {
       username: string;
-      email: string;
     } | null;
   }>;
   metadata?: {
@@ -118,7 +115,7 @@ export const getLicenses = async (
     page: page.toString(),
     limit: limit.toString(),
   };
-  
+
   if (status) query.status = status;
   if (search) query.search = search;
 
@@ -157,7 +154,7 @@ export const getApiKeys = async (
     page: page.toString(),
     limit: limit.toString(),
   };
-  
+
   if (isActive) query.isActive = isActive;
   if (search) query.search = search;
 
@@ -257,7 +254,7 @@ export const revokeLicense = async (
 ): Promise<any> => {
   const response = await (client.api.admin.licenses[':id'].$delete as any)({
     param: { id: id.toString() },
-    json: { reason: reason || '' } 
+    json: { reason: reason || '' }
   });
 
   if (!response.ok) {
@@ -284,7 +281,6 @@ export interface DashboardStatsResponse {
     recentSubmissions: {
       id: number;
       name: string;
-      email: string;
       submissionDate: string;
       shopName: string;
     }[];

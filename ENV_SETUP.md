@@ -30,12 +30,6 @@ This will create:
 | `PORT` | Server port number | No | `3000` |
 | `NODE_ENV` | Environment mode | No | `development` |
 | `CORS_ORIGIN` | Allowed CORS origin URL | No | `http://localhost:5173` |
-| `SMTP_HOST` | SMTP server hostname | Yes | - |
-| `SMTP_PORT` | SMTP server port | No | `587` |
-| `SMTP_SECURE` | Use TLS for SMTP | No | `false` |
-| `SMTP_USER` | SMTP username/email | Yes | - |
-| `SMTP_PASS` | SMTP password | Yes | - |
-| `SMTP_FROM` | Default "from" email address | Yes | - |
 | `RECAPTCHA_SITE_KEY` | Google reCAPTCHA site key | Yes | - |
 | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA secret key | Yes | - |
 
@@ -60,7 +54,6 @@ Example error output:
 🚨 Environment variable validation failed:
 
   ❌ JWT_SECRET: JWT_SECRET must be at least 32 characters for security
-  ❌ SMTP_USER: SMTP_USER must be a valid email address
   ❌ DATABASE_URL: DATABASE_URL is required
 
 💡 Please check your .env file and ensure all required variables are set correctly.

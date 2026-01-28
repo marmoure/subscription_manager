@@ -6,10 +6,6 @@ process.env.JWT_SECRET = 's'.repeat(32);
 process.env.API_KEY_SECRET = 'k'.repeat(32);
 process.env.RECAPTCHA_SITE_KEY = 'site-key';
 process.env.RECAPTCHA_SECRET_KEY = 'secret-key';
-process.env.SMTP_HOST = 'smtp.example.com';
-process.env.SMTP_USER = 'test@example.com';
-process.env.SMTP_PASS = 'password';
-process.env.SMTP_FROM = 'noreply@example.com';
 process.env.NODE_ENV = 'test';
 
 import { app } from '../src/index';
@@ -26,7 +22,7 @@ describe('Comprehensive Security Audit', () => {
   beforeAll(async () => {
     // Run migrations
     migrate(db, { migrationsFolder: 'drizzle' });
-    
+
     // Clear DB
     await db.delete(adminUsers).execute();
     await db.delete(licenseKeys).execute();
@@ -36,7 +32,6 @@ describe('Comprehensive Security Audit', () => {
     const hashedPassword = await hashPassword('AdminPass123!');
     const [admin] = await db.insert(adminUsers).values({
       username: 'securityadmin',
-      email: 'security@test.com',
       hashedPassword,
       role: 'admin',
       isActive: true,
@@ -45,7 +40,6 @@ describe('Comprehensive Security Audit', () => {
     adminToken = generateAccessToken({
       adminId: admin.id,
       username: admin.username,
-      email: admin.email,
     });
   });
 
@@ -63,7 +57,7 @@ describe('Comprehensive Security Audit', () => {
       const res = await app.request(`/api/admin/licenses?search=${encodeURIComponent("' OR '1'='1")}`, {
         headers: { 'Authorization': `Bearer ${adminToken}` }
       });
-      
+
       expect(res.status).toBe(200);
       const data = await res.json() as any;
       // Should treat it as a literal string search, returning 0 results (unless someone has that name)
@@ -76,7 +70,7 @@ describe('Comprehensive Security Audit', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          usernameOrEmail: "' OR '1'='1",
+          username: "' OR '1'='1",
           password: "password",
         }),
       });
@@ -91,7 +85,6 @@ describe('Comprehensive Security Audit', () => {
         machineId: 'MACHINE001',
         phone: '1234567890',
         shopName: 'My Shop',
-        email: 'test@example.com',
         numberOfCashiers: 1,
         captchaToken: 'test-token'
       };
@@ -113,7 +106,6 @@ describe('Comprehensive Security Audit', () => {
         machineId: 'MACHINE002',
         phone: '1234567890',
         shopName: '<img src=x onerror=alert(1)>',
-        email: 'test@example.com',
         numberOfCashiers: 1,
         captchaToken: 'test-token'
       };
@@ -147,7 +139,6 @@ describe('Comprehensive Security Audit', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: 'admin2',
-          email: 'admin2@test.com',
           password: 'Password123!',
         }),
       });
@@ -164,7 +155,6 @@ describe('Comprehensive Security Audit', () => {
         machineId: 'MACHINEMASS',
         phone: '1234567890',
         shopName: 'Mass Shop',
-        email: 'mass@example.com',
         numberOfCashiers: 1,
         captchaToken: 'test-token',
         // Malicious fields
@@ -187,14 +177,14 @@ describe('Comprehensive Security Audit', () => {
       // We'd need to fetch the license to be sure, but since we use Zod parsing (not passthrough),
       // and the service explicitly picks fields, it should be safe.
       // We can verify the status is 'active' (default) not 'revoked'.
-      
+
       const licenseKey = data.data.licenseKey;
       const licenseRes = await app.request(`/api/admin/licenses?search=${encodeURIComponent(licenseKey)}`, {
-          headers: { 'Authorization': `Bearer ${adminToken}` }
+        headers: { 'Authorization': `Bearer ${adminToken}` }
       });
       const licenseData = await licenseRes.json() as any;
       const license = licenseData.data[0];
-      
+
       expect(license.status).toBe('active');
     });
   });
@@ -205,7 +195,6 @@ describe('Comprehensive Security Audit', () => {
         name: 'Rate Limit',
         phone: '1234567890',
         shopName: 'RL Shop',
-        email: 'rl@example.com',
         numberOfCashiers: 1,
         captchaToken: 'test-token'
       };
@@ -264,41 +253,40 @@ describe('Comprehensive Security Audit', () => {
   });
 
   describe('6. Captcha / Honeypot', () => {
-      it('should reject if honeypot field is filled', async () => {
-        const payload = {
-            name: 'Spam Bot',
-            machineId: 'SPAM001',
-            phone: '1234567890',
-            shopName: 'Spam Shop',
-            email: 'spam@example.com',
-            numberOfCashiers: 1,
-            captchaToken: 'test-token',
-            website: 'http://spam.com' // Honeypot
-          };
-    
-          const res = await app.request('/api/public/submit-license-request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
+    it('should reject if honeypot field is filled', async () => {
+      const payload = {
+        name: 'Spam Bot',
+        machineId: 'SPAM001',
+        phone: '1234567890',
+        shopName: 'Spam Shop',
+        numberOfCashiers: 1,
+        captchaToken: 'test-token',
+        website: 'http://spam.com' // Honeypot
+      };
 
-          expect(res.status).toBe(400);
-          const data = await res.json() as any;
-          expect(data.message).toBe('Spam detected');
+      const res = await app.request('/api/public/submit-license-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
+
+      expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.message).toBe('Spam detected');
+    });
   });
 
   describe('7. API Key Validation', () => {
     it('should reject access without API Key', async () => {
-        const res = await app.request('/api/v1/software/verify');
-        expect(res.status).toBe(401);
+      const res = await app.request('/api/v1/software/verify');
+      expect(res.status).toBe(401);
     });
 
     it('should reject access with invalid API Key', async () => {
-        const res = await app.request('/api/v1/software/verify', {
-            headers: { 'X-API-Key': 'invalid-key' }
-        });
-        expect(res.status).toBe(401);
+      const res = await app.request('/api/v1/software/verify', {
+        headers: { 'X-API-Key': 'invalid-key' }
+      });
+      expect(res.status).toBe(401);
     });
 
     // TODO: Create a valid API key and test success if needed, but we are focusing on security failures.

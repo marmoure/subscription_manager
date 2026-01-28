@@ -211,7 +211,7 @@ export function LicenseRequestForm() {
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="+1234567890"
+                        placeholder="0654392689"
                         type="tel"
                         {...field}
                         className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}

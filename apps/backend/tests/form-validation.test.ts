@@ -19,7 +19,6 @@ describe('Form Validation Edge Cases and Malicious Inputs', () => {
     machineId: `MACHINE${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
     phone: '1234567890',
     shopName: 'Valid Shop',
-    email: 'john@example.com',
     numberOfCashiers: 5,
     captchaToken: 'test-token'
   };
@@ -64,7 +63,7 @@ describe('Form Validation Edge Cases and Malicious Inputs', () => {
       if (res.status !== 201) {
         console.log('SQLi test failed:', await res.json());
       }
-      expect(res.status).toBe(201); 
+      expect(res.status).toBe(201);
     });
 
     it('should reject XSS attempts in name', async () => {
@@ -103,13 +102,7 @@ describe('Form Validation Edge Cases and Malicious Inputs', () => {
     });
   });
 
-  describe('Email Validation', () => {
-    it('should reject invalid emails', async () => {
-      await testValidationFailure({ ...validBasePayload, email: 'invalid-email' }, 'email');
-      await testValidationFailure({ ...validBasePayload, email: 'test@' }, 'email');
-      await testValidationFailure({ ...validBasePayload, email: 'test@example@com' }, 'email');
-    });
-  });
+
 
   describe('Cashiers Validation', () => {
     it('should reject invalid number of cashiers', async () => {
@@ -129,11 +122,11 @@ describe('Form Validation Edge Cases and Malicious Inputs', () => {
       const res = await app.request('/api/public/submit-license-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          ...validBasePayload, 
-          name: '🚀 User ✨', 
+        body: JSON.stringify({
+          ...validBasePayload,
+          name: '🚀 User ✨',
           shopName: '🏪 Unicode Shop 🌍',
-          machineId: `UNICODE${RUN_ID}2`.replace(/[^a-zA-Z0-9]/g, '') 
+          machineId: `UNICODE${RUN_ID}2`.replace(/[^a-zA-Z0-9]/g, '')
         })
       });
       if (res.status !== 201) {
@@ -148,11 +141,10 @@ describe('Form Validation Edge Cases and Malicious Inputs', () => {
       const res = await app.request('/api/public/submit-license-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: 'A', 
-          machineId: '', 
-          phone: 'abc', 
-          email: 'not-an-email',
+        body: JSON.stringify({
+          name: 'A',
+          machineId: '',
+          phone: 'abc',
           numberOfCashiers: -5,
           captchaToken: ''
         })
@@ -163,7 +155,6 @@ describe('Form Validation Edge Cases and Malicious Inputs', () => {
       expect(data.errors.fieldErrors.name).toBeDefined();
       expect(data.errors.fieldErrors.machineId).toBeDefined();
       expect(data.errors.fieldErrors.phone).toBeDefined();
-      expect(data.errors.fieldErrors.email).toBeDefined();
       expect(data.errors.fieldErrors.numberOfCashiers).toBeDefined();
       expect(data.errors.fieldErrors.captchaToken).toBeDefined();
     });

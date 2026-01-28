@@ -25,7 +25,6 @@ export class LicenseService {
                 columns: {
                   id: true,
                   username: true,
-                  email: true,
                 }
               }
             },
@@ -199,8 +198,6 @@ export class LicenseService {
         }).run();
 
         // TODO: Clear license from cache if a caching layer is implemented
-        // TODO: Send notification email to license holder if an email service is available
-
         return updatedLicense;
       });
     } catch (error) {

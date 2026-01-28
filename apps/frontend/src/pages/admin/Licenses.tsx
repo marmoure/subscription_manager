@@ -48,11 +48,11 @@ const Licenses: React.FC = () => {
   const [licenses, setLicenses] = useState<LicenseDataItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Get initial page from URL or default to 1
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   const initialLimit = parseInt(searchParams.get('limit') || '20', 10);
-  
+
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(initialLimit);
   const [totalPages, setTotalPages] = useState(1);
@@ -98,13 +98,13 @@ const Licenses: React.FC = () => {
 
   useEffect(() => {
     fetchLicenses();
-    
+
     // Update URL query params
     const params: any = { page: page.toString() };
     if (pageSize !== 20) params.limit = pageSize.toString();
     if (statusFilter) params.status = statusFilter;
     if (searchTerm) params.q = searchTerm;
-    
+
     setSearchParams(params, { replace: true });
   }, [page, pageSize, statusFilter, debouncedSearchTerm, fetchLicenses, setSearchParams]);
 
@@ -124,10 +124,10 @@ const Licenses: React.FC = () => {
 
   const handleStatusUpdate = async (reason: string) => {
     if (!pendingAction) return;
-    
+
     const license = licenses.find(l => l.id === pendingAction.id);
     const oldStatus = license?.status as 'active' | 'inactive';
-    
+
     setIsUpdating(true);
     try {
       let response;
@@ -160,7 +160,7 @@ const Licenses: React.FC = () => {
 
   const handleUndo = async () => {
     if (!previousState) return;
-    
+
     setIsUpdating(true);
     try {
       const response = await updateLicenseStatus(previousState.id, previousState.status, 'Undo previous status change');
@@ -204,7 +204,7 @@ const Licenses: React.FC = () => {
 
   const getConfirmDialogDetails = () => {
     if (!pendingAction) return { title: '', description: '', destructive: false };
-    
+
     if (pendingAction.status === 'active') {
       return {
         title: 'Activate License',
@@ -255,9 +255,9 @@ const Licenses: React.FC = () => {
               </div>
             </div>
             {previousState && (
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleUndo}
                 disabled={isUpdating}
                 className="ml-4 bg-white dark:bg-slate-950"
@@ -274,7 +274,7 @@ const Licenses: React.FC = () => {
               <div className="relative w-full md:w-96">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by key, name, email or machine ID..."
+                  placeholder="Search by key, name or machine ID..."
                   className="pl-9"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -282,7 +282,7 @@ const Licenses: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <Filter className="h-4 w-4 text-muted-foreground" />
-                <select 
+                <select
                   className="flex h-10 w-full md:w-40 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={statusFilter}
                   onChange={(e) => {
@@ -352,7 +352,6 @@ const Licenses: React.FC = () => {
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium text-sm">{license.submission?.name || 'Unknown'}</span>
-                            <span className="text-xs text-muted-foreground">{license.submission?.email || 'No email'}</span>
                             {license.submission?.shopName && (
                               <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">
                                 {license.submission.shopName}
@@ -373,15 +372,15 @@ const Licenses: React.FC = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               title="View Details"
                               onClick={() => navigate(`/admin/licenses/${license.id}`)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            
+
                             {license.status !== 'revoked' && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -392,7 +391,7 @@ const Licenses: React.FC = () => {
                                 <DropdownMenuContent align="end" className="w-40">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     disabled={license.status === 'active'}
                                     onClick={() => openStatusConfirm(license.id, 'active')}
                                     className="text-green-600 focus:text-green-600"
@@ -400,7 +399,7 @@ const Licenses: React.FC = () => {
                                     <CheckCircle className="mr-2 h-4 w-4" />
                                     Activate
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     disabled={license.status === 'inactive'}
                                     onClick={() => openStatusConfirm(license.id, 'inactive')}
                                     className="text-amber-600 focus:text-amber-600"
@@ -409,7 +408,7 @@ const Licenses: React.FC = () => {
                                     Deactivate
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => openStatusConfirm(license.id, 'revoked')}
                                     className="text-red-600 focus:text-red-600 font-medium"
                                   >

@@ -31,14 +31,12 @@ async function seed() {
         const admins = await db.insert(schema.adminUsers).values([
             {
                 username: 'admin',
-                email: 'admin@example.com',
                 hashedPassword: hashedPassword,
                 role: 'admin',
                 isActive: true,
             },
             {
                 username: 'superadmin',
-                email: 'superadmin@example.com',
                 hashedPassword: hashedPassword2,
                 role: 'super-admin',
                 isActive: true,
@@ -48,8 +46,8 @@ async function seed() {
         const [admin1, admin2] = admins;
 
         console.log(`✅ Created ${admins.length} admin users`);
-        console.log(`   Admin 1 ID: ${admin1.id}, Username: ${admin1.username}, Email: ${admin1.email}`);
-        console.log(`   Admin 2 ID: ${admin2.id}, Username: ${admin2.username}, Email: ${admin2.email}`);
+        console.log(`   Admin 1 ID: ${admin1.id}, Username: ${admin1.username}`);
+        console.log(`   Admin 2 ID: ${admin2.id}, Username: ${admin2.username}`);
 
         // Seed API Keys
         console.log('🔑 Seeding API keys...');
@@ -140,7 +138,6 @@ async function seed() {
                 machineId: 'MACHINE-001-ABC123',
                 phone: '+1234567890',
                 shopName: 'Tech Store Downtown',
-                email: 'john.doe@techstore.com',
                 numberOfCashiers: 3,
                 submissionDate: new Date('2024-01-15'),
                 ipAddress: '192.168.1.100',
@@ -151,7 +148,6 @@ async function seed() {
                 machineId: 'MACHINE-002-DEF456',
                 phone: '+1234567891',
                 shopName: 'Fashion Boutique',
-                email: 'jane.smith@fashionboutique.com',
                 numberOfCashiers: 2,
                 submissionDate: new Date('2024-02-20'),
                 ipAddress: '192.168.1.101',
@@ -162,7 +158,6 @@ async function seed() {
                 machineId: 'MACHINE-003-GHI789',
                 phone: '+1234567892',
                 shopName: 'Hardware Supplies',
-                email: 'bob.johnson@hardware.com',
                 numberOfCashiers: 5,
                 submissionDate: new Date('2024-03-10'),
                 ipAddress: '192.168.1.102',
@@ -173,7 +168,6 @@ async function seed() {
                 machineId: 'MACHINE-004-JKL012',
                 phone: '+1234567893',
                 shopName: 'Grocery Mart',
-                email: 'alice.williams@grocerymart.com',
                 numberOfCashiers: 4,
                 submissionDate: new Date('2024-04-05'),
                 ipAddress: '192.168.1.103',
@@ -184,7 +178,6 @@ async function seed() {
                 machineId: 'MACHINE-005-MNO345',
                 phone: '+1234567894',
                 shopName: 'Coffee Shop Central',
-                email: 'charlie.brown@coffeeshop.com',
                 numberOfCashiers: 2,
                 submissionDate: new Date('2024-05-12'),
                 ipAddress: '192.168.1.104',
@@ -272,11 +265,9 @@ async function seed() {
         await db.insert(schema.users).values([
             {
                 name: 'Test User 1',
-                email: 'testuser1@example.com',
             },
             {
                 name: 'Test User 2',
-                email: 'testuser2@example.com',
             },
         ]);
         console.log(`✅ Created 2 users`);

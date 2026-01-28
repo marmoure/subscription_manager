@@ -27,7 +27,7 @@ function generateRSAKeyPair() {
       format: 'pem'
     }
   });
-  
+
   return { privateKey, publicKey };
 }
 
@@ -66,7 +66,7 @@ console.log('✓ Generated API_KEY_SECRET (64 characters)');
 if (fs.existsSync(backendEnvExample)) {
   if (!fs.existsSync(backendEnv)) {
     let envContent = fs.readFileSync(backendEnvExample, 'utf8');
-    
+
     // Replace placeholder values with generated secrets
     envContent = envContent.replace(
       /JWT_SECRET=.*/,
@@ -76,7 +76,7 @@ if (fs.existsSync(backendEnvExample)) {
       /API_KEY_SECRET=.*/,
       `API_KEY_SECRET=${apiKeySecret}`
     );
-    
+
     fs.writeFileSync(backendEnv, envContent);
     console.log('✓ Created apps/backend/.env with generated secrets');
   } else {
@@ -128,6 +128,6 @@ console.log('  • Keep your private key secure and backed up');
 console.log('  • The private key is used to sign license keys');
 console.log('  • The public key is used by clients to verify licenses');
 console.log('\n💡 Next steps:');
-console.log('  1. Review and update apps/backend/.env with your SMTP and reCAPTCHA configuration');
+console.log('  1. Review and update apps/backend/.env with your reCAPTCHA configuration');
 console.log('  2. Review and update apps/frontend/.env if needed');
 console.log('  3. Run "pnpm dev" to start the development servers');

@@ -14,16 +14,16 @@ describe('Rate Limiting Tests', () => {
   beforeAll(async () => {
     // Ensure we have a test API key in the DB
     try {
-        const existing = await db.select().from(apiKeys).where(eq(apiKeys.key, TEST_API_KEY)).get();
-        if (!existing) {
-          await db.insert(apiKeys).values({
-            key: TEST_API_KEY,
-            name: 'Test API Key',
-            isActive: true,
-          });
-        }
+      const existing = await db.select().from(apiKeys).where(eq(apiKeys.key, TEST_API_KEY)).get();
+      if (!existing) {
+        await db.insert(apiKeys).values({
+          key: TEST_API_KEY,
+          name: 'Test API Key',
+          isActive: true,
+        });
+      }
     } catch (e) {
-        console.error('Failed to setup test API key', e);
+      console.error('Failed to setup test API key', e);
     }
   });
 
@@ -39,14 +39,13 @@ describe('Rate Limiting Tests', () => {
         machineId: 'MACHINERATELIMIT1',
         phone: '1234567890',
         shopName: 'Test Shop',
-        email: 'test@example.com',
         numberOfCashiers: 1,
         captchaToken: 'test-token'
       };
 
       for (let i = 0; i < 10; i++) {
         const currentPayload = { ...payload, machineId: `MACHINERLPUBLIC${RUN_ID}${i}`.replace(/[^a-zA-Z0-9]/g, '') };
-        
+
         const res = await app.request('/api/public/submit-license-request', {
           method: 'POST',
           headers: {
@@ -82,7 +81,6 @@ describe('Rate Limiting Tests', () => {
           machineId: `MACHINERLPUBLICDIFFIP${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
           phone: '1234567890',
           shopName: 'Test Shop',
-          email: 'test2@example.com',
           numberOfCashiers: 1,
           captchaToken: 'test-token'
         })
@@ -121,61 +119,58 @@ describe('Rate Limiting Tests', () => {
     it('should reset after the window passes', async () => {
       const now = Date.now();
       const dateSpy = jest.spyOn(Date, 'now');
-      
+
       try {
         const ip = '2.2.2.2';
-        
-        for (let i = 0; i < 5; i++) {
-            await app.request('/api/public/submit-license-request', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-Forwarded-For': ip
-                },
-                body: JSON.stringify({
-                    name: 'Reset Test',
-                    machineId: `RESETTEST${RUN_ID}${i}`.replace(/[^a-zA-Z0-9]/g, ''),
-                    phone: '1234567890',
-                    shopName: 'Shop',
-                    email: 'reset@example.com',
-                    numberOfCashiers: 1,
-                    captchaToken: 'test-token'
-                })
-              });
-        }
 
-        const resLimit = await app.request('/api/public/submit-license-request', {
+        for (let i = 0; i < 5; i++) {
+          await app.request('/api/public/submit-license-request', {
             method: 'POST',
-            headers: { 'X-Forwarded-For': ip, 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Forwarded-For': ip
+            },
             body: JSON.stringify({
-              name: 'Limit Test',
-              machineId: `LIMITTEST${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
+              name: 'Reset Test',
+              machineId: `RESETTEST${RUN_ID}${i}`.replace(/[^a-zA-Z0-9]/g, ''),
               phone: '1234567890',
               shopName: 'Shop',
-              email: 'limit@example.com',
               numberOfCashiers: 1,
               captchaToken: 'test-token'
             })
+          });
+        }
+
+        const resLimit = await app.request('/api/public/submit-license-request', {
+          method: 'POST',
+          headers: { 'X-Forwarded-For': ip, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'Limit Test',
+            machineId: `LIMITTEST${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
+            phone: '1234567890',
+            shopName: 'Shop',
+            numberOfCashiers: 1,
+            captchaToken: 'test-token'
+          })
         });
         expect(resLimit.status).toBe(429);
 
         dateSpy.mockReturnValue(now + 16 * 60 * 1000);
 
         const resReset = await app.request('/api/public/submit-license-request', {
-            method: 'POST',
-            headers: { 
-                'X-Forwarded-For': ip,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                name: 'Reset Test 2',
-                machineId: `RESETTESTAFTER${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
-                phone: '1234567890',
-                shopName: 'Shop',
-                email: 'reset2@example.com',
-                numberOfCashiers: 1,
-                captchaToken: 'test-token'
-            })
+          method: 'POST',
+          headers: {
+            'X-Forwarded-For': ip,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: 'Reset Test 2',
+            machineId: `RESETTESTAFTER${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
+            phone: '1234567890',
+            shopName: 'Shop',
+            numberOfCashiers: 1,
+            captchaToken: 'test-token'
+          })
         });
         expect(resReset.status).toBe(201);
 

@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { AdminLayout } from '../../layouts/AdminLayout';
-import { 
-  Card, CardContent, CardDescription, CardHeader, CardTitle 
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { 
-  Users, Key, FileText, TrendingUp, RefreshCcw, ArrowRight, Activity 
+import {
+  Users, Key, FileText, TrendingUp, RefreshCcw, ArrowRight, Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getDashboardStats, DashboardStatsResponse } from '@/services/admin';
@@ -81,10 +81,10 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-             <span className="text-xs text-muted-foreground hidden sm:inline-block">
+            <span className="text-xs text-muted-foreground hidden sm:inline-block">
               Updated: {lastUpdated.toLocaleTimeString()}
             </span>
-            <select 
+            <select
               className="h-9 w-[130px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
@@ -101,29 +101,29 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard 
-            title="Total Licenses" 
-            value={data?.stats.totalLicenses} 
-            icon={Key} 
+          <StatCard
+            title="Total Licenses"
+            value={data?.stats.totalLicenses}
+            icon={Key}
             subtext="All time licenses"
           />
-          <StatCard 
-            title="Active Licenses" 
-            value={data?.stats.activeLicenses} 
-            icon={Activity} 
+          <StatCard
+            title="Active Licenses"
+            value={data?.stats.activeLicenses}
+            icon={Activity}
             subtext="Currently active"
           />
-          <StatCard 
-            title="Submissions" 
-            value={data?.stats.submissionsThisMonth} 
-            icon={FileText} 
+          <StatCard
+            title="Submissions"
+            value={data?.stats.submissionsThisMonth}
+            icon={FileText}
             subtext="This month"
             trend={data?.stats.growth}
           />
-           <StatCard 
-            title="Growth" 
-            value={`${data?.stats.growth}%`} 
-            icon={TrendingUp} 
+          <StatCard
+            title="Growth"
+            value={`${data?.stats.growth}%`}
+            icon={TrendingUp}
             subtext="Vs last month"
           />
         </div>
@@ -145,25 +145,25 @@ export default function Dashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data?.charts.licensesOverTime}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#888888" 
-                        fontSize={12} 
-                        tickLine={false} 
+                      <XAxis
+                        dataKey="date"
+                        stroke="#888888"
+                        fontSize={12}
+                        tickLine={false}
                         axisLine={false}
                         tickFormatter={(value) => {
                           const date = new Date(value);
                           return `${date.getDate()}/${date.getMonth() + 1}`;
                         }}
                       />
-                      <YAxis 
-                        stroke="#888888" 
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        tickFormatter={(value) => `${value}`} 
+                      <YAxis
+                        stroke="#888888"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `${value}`}
                       />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
                         labelFormatter={(value) => new Date(value).toLocaleDateString()}
                       />
@@ -186,7 +186,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="h-[300px] w-full">
                 {loading ? (
-                   <Skeleton className="h-full w-full" />
+                  <Skeleton className="h-full w-full" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -205,7 +205,7 @@ export default function Dashboard() {
                         ))}
                       </Pie>
                       <Tooltip />
-                      <Legend verticalAlign="bottom" height={36}/>
+                      <Legend verticalAlign="bottom" height={36} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -213,74 +213,74 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
-        
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-             {/* Recent Submissions */}
-             <Card className="col-span-4">
-                <CardHeader>
-                    <CardTitle>Recent Submissions</CardTitle>
-                    <CardDescription>Latest license requests from users.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {loading ? (
-                            Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
-                        ) : (
-                            !data?.activity.recentSubmissions || data.activity.recentSubmissions.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-4">No recent submissions</p>
-                            ) : (
-                                data.activity.recentSubmissions.map((sub) => (
-                                    <div key={sub.id} className="flex items-center justify-between border-b last:border-0 pb-4 last:pb-0">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium leading-none">{sub.name}</p>
-                                            <p className="text-xs text-muted-foreground">{sub.shopName}</p>
-                                        </div>
-                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                            <span>{new Date(sub.submissionDate).toLocaleDateString()}</span>
-                                            <Link to={`/admin/submissions?search=${encodeURIComponent(sub.email)}`} className="text-primary hover:underline">
-                                                <ArrowRight className="h-4 w-4" />
-                                            </Link>
-                                        </div>
-                                    </div>
-                                ))
-                            )
-                        )}
-                    </div>
-                </CardContent>
-             </Card>
 
-             {/* Recent Activity */}
-             <Card className="col-span-3">
-                <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Latest system events and logs.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                         {loading ? (
-                            Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
-                        ) : (
-                            !data?.activity.recentStatusChanges || data.activity.recentStatusChanges.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
-                            ) : (
-                                data.activity.recentStatusChanges.map((log) => (
-                                    <div key={log.id} className="flex flex-col space-y-1 border-b last:border-0 pb-4 last:pb-0">
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-sm font-medium">License Status Change</p>
-                                            <span className="text-xs text-muted-foreground">{new Date(log.timestamp).toLocaleDateString()}</span>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            <span className="font-semibold">{log.adminUsername || 'System'}</span> changed status from{' '}
-                                            <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">{log.oldStatus || 'none'}</span> to{' '}
-                                            <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">{log.newStatus}</span>
-                                        </p>
-                                    </div>
-                                ))
-                            )
-                        )}
-                    </div>
-                </CardContent>
-             </Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          {/* Recent Submissions */}
+          <Card className="col-span-4">
+            <CardHeader>
+              <CardTitle>Recent Submissions</CardTitle>
+              <CardDescription>Latest license requests from users.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {loading ? (
+                  Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
+                ) : (
+                  !data?.activity.recentSubmissions || data.activity.recentSubmissions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No recent submissions</p>
+                  ) : (
+                    data.activity.recentSubmissions.map((sub) => (
+                      <div key={sub.id} className="flex items-center justify-between border-b last:border-0 pb-4 last:pb-0">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium leading-none">{sub.name}</p>
+                          <p className="text-xs text-muted-foreground">{sub.shopName}</p>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>{new Date(sub.submissionDate).toLocaleDateString()}</span>
+                          <Link to={`/admin/submissions?search=${encodeURIComponent(sub.name)}`} className="text-primary hover:underline">
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))
+                  )
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card className="col-span-3">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest system events and logs.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {loading ? (
+                  Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
+                ) : (
+                  !data?.activity.recentStatusChanges || data.activity.recentStatusChanges.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+                  ) : (
+                    data.activity.recentStatusChanges.map((log) => (
+                      <div key={log.id} className="flex flex-col space-y-1 border-b last:border-0 pb-4 last:pb-0">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">License Status Change</p>
+                          <span className="text-xs text-muted-foreground">{new Date(log.timestamp).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-semibold">{log.adminUsername || 'System'}</span> changed status from{' '}
+                          <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">{log.oldStatus || 'none'}</span> to{' '}
+                          <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">{log.newStatus}</span>
+                        </p>
+                      </div>
+                    ))
+                  )
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </AdminLayout>

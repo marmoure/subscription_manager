@@ -26,7 +26,6 @@ describe('CAPTCHA and Spam Prevention Tests', () => {
       machineId: `MACHINECAPTCHA${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
       phone: '1234567890',
       shopName: 'Captcha Shop',
-      email: 'captcha@example.com',
       numberOfCashiers: 1,
       captchaToken: 'test-token'
     };
@@ -90,7 +89,6 @@ describe('CAPTCHA and Spam Prevention Tests', () => {
         machineId,
         phone: '1234567890',
         shopName: 'Duplicate Shop',
-        email: 'duplicate@example.com',
         numberOfCashiers: 1,
         captchaToken: 'test-token'
       };
@@ -130,7 +128,6 @@ describe('CAPTCHA and Spam Prevention Tests', () => {
           machineId: `MACHINEBOT${RUN_ID}`.replace(/[^a-zA-Z0-9]/g, ''),
           phone: '1234567890',
           shopName: 'Bot Shop',
-          email: 'bot@example.com',
           numberOfCashiers: 1,
           captchaToken: 'test-token',
           website: 'http://spam-bot.com'

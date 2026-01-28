@@ -10,7 +10,6 @@ export interface AuthResponse {
     admin: {
       id: number;
       username: string;
-      email: string;
       role?: 'admin' | 'super-admin';
     };
   };

@@ -39,7 +39,6 @@ describe('License Transaction Verification', () => {
 
   const validSubmission = {
     name: 'Test User',
-    email: 'test@example.com',
     machineId: 'MACHINE-123',
     phone: '1234567890',
     shopName: 'Test Shop',
@@ -81,7 +80,7 @@ describe('License Transaction Verification', () => {
     it('should prevent duplicate licenses even if checkMachineIdExists is bypassed (Race Condition Protected)', async () => {
       // 1. Create an initial license
       await LicenseService.createLicenseWithTransaction(validSubmission);
-      
+
       const licensesBefore = await db.select().from(licenseKeys);
       expect(licensesBefore).toHaveLength(1);
 
@@ -93,7 +92,7 @@ describe('License Transaction Verification', () => {
       // This should now FAIL due to the database unique constraint on machineId
       await expect(LicenseService.createLicenseWithTransaction(validSubmission))
         .rejects
-        .toThrow(); 
+        .toThrow();
 
       // 4. Verify we still have only 1 license
       const licensesAfter = await db.select().from(licenseKeys);

@@ -26,18 +26,18 @@ describe('License Key Integrity and Performance Tests', () => {
   test('Verify license key generation produces 10,000 unique keys', () => {
     const keys = new Set<string>();
     const count = 10000;
-    
+
     console.log(`Generating ${count} keys...`);
     const start = Date.now();
-    
+
     for (let i = 0; i < count; i++) {
       const { serialKey } = generateLicense(testMachineId, testAppName, testMaxUsers);
       keys.add(serialKey);
     }
-    
+
     const end = Date.now();
     console.log(`Generated ${count} keys in ${end - start}ms (${(end - start) / count}ms per key)`);
-    
+
     expect(keys.size).toBe(count);
   });
 
@@ -46,11 +46,11 @@ describe('License Key Integrity and Performance Tests', () => {
     // Format: <base64 payload>.<base64 signature>
     const parts = serialKey.split('.');
     expect(parts.length).toBe(2);
-    
+
     const [payloadB64, signatureB64] = parts;
     expect(() => Buffer.from(payloadB64, 'base64')).not.toThrow();
     expect(() => Buffer.from(signatureB64, 'base64')).not.toThrow();
-    
+
     // Check if payload is valid JSON
     const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf8');
     const payload = JSON.parse(payloadJson);
@@ -62,7 +62,7 @@ describe('License Key Integrity and Performance Tests', () => {
 
   test('Test concurrent license generation', async () => {
     const count = 100;
-    const promises = Array.from({ length: count }).map(() => 
+    const promises = Array.from({ length: count }).map(() =>
       new Promise<{ serialKey: string }>((resolve) => {
         // Use a small timeout to ensure they might hit the same millisecond if not careful
         // but generateLicense is synchronous anyway. 
@@ -70,10 +70,10 @@ describe('License Key Integrity and Performance Tests', () => {
         resolve(generateLicense(testMachineId, testAppName, testMaxUsers));
       })
     );
-    
+
     const results = await Promise.all(promises);
     const keys = new Set(results.map(r => r.serialKey));
-    
+
     // Even if generated concurrently, they should be unique if issueDate has enough precision
     // or if they are truly sequential. Node.js is single-threaded for JS, 
     // but Promise.all might show if there's any race condition in some internal state (though unlikely here).
@@ -82,21 +82,21 @@ describe('License Key Integrity and Performance Tests', () => {
 
   test('Verify database unique constraint prevents duplicate keys', async () => {
     const { serialKey } = generateLicense('DB-TEST-MACHINE', 'DB-TEST-APP', 5);
-    
+
     // Insert once
     await db.insert(licenseKeys).values({
       licenseKey: serialKey,
       machineId: 'DB-TEST-MACHINE',
       status: 'active',
     });
-    
+
     // Try to insert again
     await expect(db.insert(licenseKeys).values({
       licenseKey: serialKey,
       machineId: 'DB-TEST-MACHINE',
       status: 'active',
     })).rejects.toThrow();
-    
+
     // Cleanup
     await db.delete(licenseKeys).where(eq(licenseKeys.licenseKey, serialKey));
   });
@@ -105,7 +105,6 @@ describe('License Key Integrity and Performance Tests', () => {
     const machineId = 'DUPLICATE-MACH-ID-' + Date.now();
     const submissionData = {
       name: 'Test User',
-      email: 'test@example.com',
       phone: '123456789',
       shopName: 'Test Shop',
       machineId: machineId,
@@ -139,7 +138,7 @@ describe('License Key Integrity and Performance Tests', () => {
   test('Identify invalid formats correctly', () => {
     expect(verifyLicense('invalid-format', PUBLIC_KEY_PATH).valid).toBe(false);
     expect(verifyLicense('part1.part2.part3', PUBLIC_KEY_PATH).valid).toBe(false);
-    
+
     const { serialKey } = generateLicense(testMachineId, testAppName, testMaxUsers);
     const [payload, sig] = serialKey.split('.');
     const tamperedKey = payload + '.' + Buffer.from('tampered-signature').toString('base64');
@@ -164,7 +163,7 @@ describe('License Key Integrity and Performance Tests', () => {
     for (let i = 0; i < count; i++) {
       keys.push(generateLicense(testMachineId, testAppName, testMaxUsers).serialKey);
     }
-    
+
     // Check for common prefixes (other than the base64 encoded payload if they are the same)
     // Actually, the payload includes issueDate which changes every time.
     // So the payload part should be different.
