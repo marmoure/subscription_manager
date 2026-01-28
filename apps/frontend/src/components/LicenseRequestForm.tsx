@@ -345,6 +345,13 @@ export function LicenseRequestForm() {
 }
 
 function LanguageSwitcher({ currentLanguage, onLanguageChange }: { currentLanguage: string, onLanguageChange: (lng: string) => void }) {
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'ar', name: 'العربية' },
+    { code: 'fr', name: 'Français' },
+    { code: 'es', name: 'Español' },
+  ];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -354,12 +361,15 @@ function LanguageSwitcher({ currentLanguage, onLanguageChange }: { currentLangua
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onLanguageChange('en')} className={currentLanguage.startsWith('en') ? "bg-accent" : ""}>
-          English
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onLanguageChange('fr')} className={currentLanguage.startsWith('fr') ? "bg-accent" : ""}>
-          Français
-        </DropdownMenuItem>
+        {languages.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => onLanguageChange(lang.code)}
+            className={currentLanguage.startsWith(lang.code) ? "bg-accent" : ""}
+          >
+            {lang.name}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )

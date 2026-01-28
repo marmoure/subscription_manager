@@ -94,6 +94,98 @@ const resources = {
         "captcha_required": "Veuillez vérifier que vous n'êtes pas un robot"
       }
     }
+  },
+  ar: {
+    translation: {
+      "home_title": "طلب ترخيص",
+      "home_description": "أكمل النموذج أدناه لطلب ترخيص لجهازك.",
+      "license_request": "طلب ترخيص",
+      "submit_request": "تقديم طلب للحصول على ترخيص جهاز جديد.",
+      "name": "الاسم",
+      "name_placeholder": "فلان الفلاني",
+      "shop_name": "اسم المحل",
+      "shop_name_placeholder": "محلي الرائع",
+      "phone_number": "رقم الهاتف",
+      "phone_placeholder": "0654392689",
+      "number_of_cashiers": "عدد الكاشير",
+      "machine_id": "معرف الجهاز",
+      "machine_id_placeholder": "XXXX-XXXX-XXXX-XXXX",
+      "machine_id_description": "يمكنك العثور على معرف الجهاز في إعدادات النظام بجهازك.",
+      "security_check": "التحقق الأمني",
+      "submitting": "جاري الإرسال...",
+      "submit_button": "إرسال الطلب",
+      "error": "خطأ",
+      "check_form_errors": "يرجى التحقق من الأخطاء في النموذج.",
+      "unknown_error": "حدث خطأ غير معروف.",
+      "failed_to_submit": "فشل إرسال الطلب. يرجى المحاولة مرة أخرى.",
+      "approved": "تمت الموافقة على طلب الترخيص!",
+      "approved_description": "تم إنشاء ترخيصك بنجاح. يرجى حفظ هذا المفتاح بشكل آمن.",
+      "expires_on": "تنتهي الصلاحية في",
+      "request_another": "طلب ترخيص آخر",
+      "copy_to_clipboard": "نسخ إلى الحافظة",
+      "validation": {
+        "name_min": "يجب أن يكون الاسم حرفين على الأقل",
+        "name_max": "يجب أن يكون الاسم أقل من 100 حرف",
+        "name_invalid": "يحتوي الاسم على أحرف غير صالحة (< أو >)",
+        "machine_id_required": "معرف الجهاز مطلوب",
+        "machine_id_max": "معرف الجهاز طويل جداً",
+        "machine_id_alphanumeric": "يجب أن يكون معرف الجهاز أبجدياً رقمياً",
+        "phone_invalid": "تنسيق رقم الهاتف غير صالح (يجب أن يكون من 7 إلى 15 رقماً)",
+        "shop_name_min": "يجب أن يكون اسم المحل حرفين على الأقل",
+        "shop_name_max": "يجب أن يكون اسم المحل أقل من 100 حرف",
+        "shop_name_invalid": "يحتوي اسم المحل على أحرف غير صالحة (< أو >)",
+        "cashiers_integer": "يجب أن يكون عدد الكاشير عدداً صحيحاً",
+        "cashiers_min": "يجب أن يكون عدد الكاشير 1 على الأقل",
+        "cashiers_max": "لا يمكن أن يتجاوز عدد الكاشير 50",
+        "captcha_required": "يرجى التحقق من أنك لست روبوتاً"
+      }
+    }
+  },
+  es: {
+    translation: {
+      "home_title": "Solicitud de Licencia",
+      "home_description": "Complete el formulario a continuación para solicitar una licencia para su máquina.",
+      "license_request": "Solicitud de Licencia",
+      "submit_request": "Envíe una solicitud para una nueva licencia de máquina.",
+      "name": "Nombre",
+      "name_placeholder": "Juan Pérez",
+      "shop_name": "Nombre de la Tienda",
+      "shop_name_placeholder": "Mi Tienda Increíble",
+      "phone_number": "Número de Teléfono",
+      "phone_placeholder": "0654392689",
+      "number_of_cashiers": "Número de Cajeros",
+      "machine_id": "ID de la Máquina",
+      "machine_id_placeholder": "XXXX-XXXX-XXXX-XXXX",
+      "machine_id_description": "Puede encontrar el ID de la máquina en la configuración del sistema de su dispositivo.",
+      "security_check": "Control de Seguridad",
+      "submitting": "Enviando...",
+      "submit_button": "Enviar Solicitud",
+      "error": "Error",
+      "check_form_errors": "Por favor, compruebe los errores en el formulario.",
+      "unknown_error": "Ocurrió un error desconocido.",
+      "failed_to_submit": "Error al enviar la solicitud. Inténtelo de nuevo.",
+      "approved": "¡Solicitud de Licencia Aprobada!",
+      "approved_description": "Su licencia se ha generado correctamente. Guarde esta clave de forma segura.",
+      "expires_on": "Expira el",
+      "request_another": "Solicitar otra Licencia",
+      "copy_to_clipboard": "Copiar al portapapeles",
+      "validation": {
+        "name_min": "El nombre debe tener al menos 2 caracteres",
+        "name_max": "El nombre debe tener menos de 100 caracteres",
+        "name_invalid": "El nombre contiene caracteres no válidos (< o >)",
+        "machine_id_required": "El ID de la máquina es obligatorio",
+        "machine_id_max": "El ID de la máquina es demasiado largo",
+        "machine_id_alphanumeric": "El ID de la máquina debe ser alfanumérico",
+        "phone_invalid": "Formato de número de teléfono no válido (debe tener entre 7 y 15 dígitos)",
+        "shop_name_min": "El nombre de la tienda debe tener al menos 2 caracteres",
+        "shop_name_max": "El nombre de la tienda debe tener menos de 100 caracteres",
+        "shop_name_invalid": "El nombre de la tienda contiene caracteres no válidos (< o >)",
+        "cashiers_integer": "El número de cajeros debe ser un número entero",
+        "cashiers_min": "El número de cajeros debe ser al menos 1",
+        "cashiers_max": "El número de cajeros no puede exceder de 50",
+        "captcha_required": "Por favor, verifique que no es un robot"
+      }
+    }
   }
 };
 
