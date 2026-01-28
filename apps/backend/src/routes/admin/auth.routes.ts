@@ -171,7 +171,7 @@ const authRoutes = new Hono()
     zValidator('json', loginAdminSchema),
     async (c) => {
       try {
-        const { username, password } = (c as any).get('validated') as LoginAdminInput;
+        const { username, password } = (c as any).get('validatedJson') as LoginAdminInput;
 
         // 1. Find user by username
         const [admin] = await db
@@ -259,7 +259,7 @@ const authRoutes = new Hono()
           }, 403);
         }
 
-        const { username, password } = (c as any).get('validated') as RegisterAdminInput;
+        const { username, password } = (c as any).get('validatedJson') as RegisterAdminInput;
 
         // 2. Hash the password
         const hashedPassword = await hashPassword(password);

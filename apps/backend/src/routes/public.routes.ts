@@ -15,7 +15,7 @@ const publicRoutes = new Hono()
     verifyCaptcha,
     async (c) => {
       try {
-        const validatedData = (c as any).get('validated') as SubmitLicenseRequestInput;
+        const validatedData = (c as any).get('validatedJson') as SubmitLicenseRequestInput;
         const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
 
         // Honeypot check: if website field is filled, it's likely a bot

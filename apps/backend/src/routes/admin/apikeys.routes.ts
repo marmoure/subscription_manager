@@ -3,8 +3,8 @@ import { db } from '../../db/db';
 import { apiKeys } from '../../db/schema';
 import { authenticateAdmin, type AdminVariables } from '../../middleware/authenticateAdmin';
 import { zValidator } from '../../middleware/validator';
-import { 
-  createApiKeySchema, 
+import {
+  createApiKeySchema,
   listApiKeysQuerySchema,
   revokeApiKeySchema,
   type CreateApiKeyInput,
@@ -27,7 +27,7 @@ adminApiKeyRoutes.get(
   authenticateAdmin,
   zValidator('query', listApiKeysQuerySchema),
   async (c) => {
-    const { page, limit, isActive, search } = (c as any).get('validated') as ListApiKeysQueryInput;
+    const { page, limit, isActive, search } = (c as any).get('validatedQuery') as ListApiKeysQueryInput;
 
     try {
       const result = await ApiKeyService.getAllApiKeys({
@@ -56,7 +56,7 @@ adminApiKeyRoutes.post(
   authenticateAdmin,
   zValidator('json', createApiKeySchema),
   async (c) => {
-    const { name } = (c as any).get('validated') as CreateApiKeyInput;
+    const { name } = (c as any).get('validatedJson') as CreateApiKeyInput;
     const admin = c.get('admin');
 
     try {
@@ -119,7 +119,7 @@ adminApiKeyRoutes.delete(
   zValidator('json', revokeApiKeySchema),
   async (c) => {
     const id = parseInt(c.req.param('id'));
-    const { reason } = (c as any).get('validated') as RevokeApiKeyInput;
+    const { reason } = (c as any).get('validatedJson') as RevokeApiKeyInput;
     const admin = c.get('admin');
 
     if (isNaN(id)) {

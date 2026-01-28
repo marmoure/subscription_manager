@@ -15,8 +15,8 @@ const adminSubmissionRoutes = new Hono()
     authenticateAdmin,
     zValidator('query', listSubmissionsQuerySchema),
     async (c) => {
-      const validated = (c as any).get('validated') as ListSubmissionsQueryInput;
-      
+      const validated = (c as any).get('validatedQuery') as ListSubmissionsQueryInput;
+
       try {
         const result = await SubmissionService.getAllSubmissions({
           page: validated.page,
@@ -28,7 +28,7 @@ const adminSubmissionRoutes = new Hono()
           minCashiers: validated.minCashiers,
           maxCashiers: validated.maxCashiers,
         });
-        
+
         return c.json({
           success: true,
           ...result

@@ -16,16 +16,16 @@ apiRoutes.post(
   '/verify-license',
   zValidator('json', verifyLicenseSchema),
   async (c) => {
-    const { machineId } = (c as any).get('validated') as VerifyLicenseInput;
+    const { machineId } = (c as any).get('validatedJson') as VerifyLicenseInput;
     const ipAddress = c.req.header('x-forwarded-for') || c.req.header('remote-addr');
-    
+
     try {
       const result = await LicenseService.verifyLicense(machineId, ipAddress);
-      
+
       if (!result.valid) {
         return c.json(result, 404);
       }
-      
+
       return c.json(result, 200);
     } catch (error) {
       console.error('Error in verifyLicense route:', error);

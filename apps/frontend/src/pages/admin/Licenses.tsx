@@ -189,6 +189,11 @@ const Licenses: React.FC = () => {
     }).format(new Date(dateString));
   };
 
+  const truncateLicenseKey = (key: string, maxLength: number = 20) => {
+    if (key.length <= maxLength) return key;
+    return `${key.substring(0, maxLength)}...`;
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -346,8 +351,8 @@ const Licenses: React.FC = () => {
                   ) : (
                     licenses.map((license) => (
                       <TableRow key={license.id}>
-                        <TableCell className="font-mono text-xs font-semibold">
-                          {license.licenseKey}
+                        <TableCell className="font-mono text-xs font-semibold" title={license.licenseKey}>
+                          {truncateLicenseKey(license.licenseKey)}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
@@ -359,9 +364,9 @@ const Licenses: React.FC = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground" title={license.machineId}>
                           <code className="bg-slate-50 dark:bg-slate-900 px-1 py-0.5 rounded border border-slate-100 dark:border-slate-800">
-                            {license.machineId}
+                            {truncateLicenseKey(license.machineId, 15)}
                           </code>
                         </TableCell>
                         <TableCell>

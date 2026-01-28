@@ -10,7 +10,7 @@ type ValidationTarget = 'json' | 'query' | 'param';
 export const zValidator = (target: ValidationTarget, schema: z.ZodSchema) => async (c: Context, next: Next) => {
   try {
     let data: any;
-    
+
     if (target === 'json') {
       data = await c.req.json();
     } else if (target === 'query') {
@@ -20,7 +20,7 @@ export const zValidator = (target: ValidationTarget, schema: z.ZodSchema) => asy
     }
 
     const result = schema.safeParse(data);
-    
+
     if (!result.success) {
       return c.json({
         success: false,
@@ -28,10 +28,14 @@ export const zValidator = (target: ValidationTarget, schema: z.ZodSchema) => asy
         errors: result.error.flatten()
       }, 400);
     }
-    
-    // Store validated data in context for later use
+
+    // Store validated data in context with target-specific key to prevent overwriting
+    const contextKey = `validated${target.charAt(0).toUpperCase() + target.slice(1)}` as any;
+    c.set(contextKey, result.data);
+
+    // Also store in 'validated' for backward compatibility (will be overwritten by last validator)
     c.set('validated' as any, result.data);
-    
+
     await next();
   } catch (error) {
     if (target === 'json') {
@@ -40,7 +44,7 @@ export const zValidator = (target: ValidationTarget, schema: z.ZodSchema) => asy
         message: 'Invalid JSON body'
       }, 400);
     }
-    
+
     return c.json({
       success: false,
       message: 'Validation error',

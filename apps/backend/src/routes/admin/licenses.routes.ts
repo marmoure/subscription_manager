@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { authenticateAdmin, authorizeRole, type AdminVariables } from '../../middleware/authenticateAdmin';
 import { zValidator } from '../../middleware/validator';
-import { 
-  listLicensesQuerySchema, 
-  getLicenseByIdSchema, 
+import {
+  listLicensesQuerySchema,
+  getLicenseByIdSchema,
   updateLicenseStatusSchema,
   revokeLicenseSchema,
-  type ListLicensesQueryInput, 
+  type ListLicensesQueryInput,
   type GetLicenseByIdInput,
   type UpdateLicenseStatusInput,
   type RevokeLicenseInput
@@ -24,8 +24,8 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
     authenticateAdmin,
     zValidator('query', listLicensesQuerySchema),
     async (c) => {
-      const { page, limit, status, search } = (c as any).get('validated') as ListLicensesQueryInput;
-      
+      const { page, limit, status, search } = (c as any).get('validatedQuery') as ListLicensesQueryInput;
+
       try {
         const result = await LicenseService.getAllLicenses({
           page,
@@ -33,7 +33,7 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
           status: status as 'active' | 'inactive' | 'revoked' | undefined,
           search,
         });
-        
+
         return c.json({
           success: true,
           ...result
@@ -57,18 +57,18 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
     authenticateAdmin,
     zValidator('param', getLicenseByIdSchema),
     async (c) => {
-      const { id } = (c as any).get('validated') as GetLicenseByIdInput;
-      
+      const { id } = (c as any).get('validatedParam') as GetLicenseByIdInput;
+
       try {
         const license = await LicenseService.getLicenseById(id);
-        
+
         if (!license) {
           return c.json({
             success: false,
             message: 'License not found'
           }, 404);
         }
-        
+
         return c.json({
           success: true,
           data: license
@@ -94,8 +94,8 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
     zValidator('param', getLicenseByIdSchema),
     zValidator('json', updateLicenseStatusSchema),
     async (c) => {
-      const { id } = (c as any).get('validated') as GetLicenseByIdInput;
-      const { status, reason } = (c as any).get('validated') as UpdateLicenseStatusInput;
+      const { id } = (c as any).get('validatedParam') as GetLicenseByIdInput;
+      const { status, reason } = (c as any).get('validatedJson') as UpdateLicenseStatusInput;
       const admin = c.get('admin');
 
       try {
@@ -139,8 +139,8 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
     zValidator('param', getLicenseByIdSchema),
     zValidator('json', revokeLicenseSchema),
     async (c) => {
-      const { id } = (c as any).get('validated') as GetLicenseByIdInput;
-      const { reason } = (c as any).get('validated') as RevokeLicenseInput;
+      const { id } = (c as any).get('validatedParam') as GetLicenseByIdInput;
+      const { reason } = (c as any).get('validatedJson') as RevokeLicenseInput;
       const admin = c.get('admin');
 
       try {
@@ -169,7 +169,7 @@ const adminLicenseRoutes = new Hono<{ Variables: AdminVariables }>()
             message: error.message
           }, 400);
         }
-        
+
         console.error(`Error in revoke license route: ${error}`);
         return c.json({
           success: false,
