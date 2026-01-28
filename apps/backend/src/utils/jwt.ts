@@ -5,7 +5,6 @@ import crypto from 'crypto';
 export interface TokenPayload {
   adminId: number;
   username: string;
-  email: string;
   jti?: string;
 }
 
@@ -60,7 +59,6 @@ export const refreshAccessToken = (refreshToken: string): string => {
   const payload = verifyToken(refreshToken);
   return generateAccessToken({
     adminId: payload.adminId,
-    username: payload.username,
-    email: payload.email
+    username: payload.username
   });
 };

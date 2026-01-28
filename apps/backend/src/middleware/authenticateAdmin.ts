@@ -8,7 +8,6 @@ export type AdminVariables = {
   admin: {
     id: number;
     username: string;
-    email: string;
     role: 'admin' | 'super-admin';
   }
 };
@@ -38,7 +37,6 @@ export const authenticateAdmin = async (c: Context<{ Variables: AdminVariables }
     const [admin] = await db.select({
       id: adminUsers.id,
       username: adminUsers.username,
-      email: adminUsers.email,
       role: adminUsers.role,
       isActive: adminUsers.isActive
     })
@@ -64,7 +62,6 @@ export const authenticateAdmin = async (c: Context<{ Variables: AdminVariables }
     c.set('admin', {
       id: admin.id,
       username: admin.username,
-      email: admin.email,
       role: admin.role as 'admin' | 'super-admin'
     });
 
