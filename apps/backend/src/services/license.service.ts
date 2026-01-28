@@ -74,14 +74,14 @@ export class LicenseService {
       if (status) {
         filters.push(eq(licenseKeys.status, status));
       }
-      
+
       if (search) {
         const searchPattern = `%${search}%`;
         filters.push(or(
           like(licenseKeys.licenseKey, searchPattern),
           like(licenseKeys.machineId, searchPattern),
           like(userSubmissions.name, searchPattern),
-          like(userSubmissions.email, searchPattern),
+
           like(userSubmissions.shopName, searchPattern)
         ));
       }
@@ -98,6 +98,8 @@ export class LicenseService {
       const total = totalResult?.count || 0;
       const totalPages = Math.ceil(total / limit);
 
+
+
       // Fetch paginated results with joined submission data using select
       const data = await db
         .select({
@@ -112,7 +114,7 @@ export class LicenseService {
           submission: {
             id: userSubmissions.id,
             name: userSubmissions.name,
-            email: userSubmissions.email,
+
             phone: userSubmissions.phone,
             shopName: userSubmissions.shopName,
             numberOfCashiers: userSubmissions.numberOfCashiers,
@@ -125,6 +127,8 @@ export class LicenseService {
         .limit(limit)
         .offset(offset)
         .orderBy(desc(licenseKeys.createdAt));
+
+
 
       return {
         data,
