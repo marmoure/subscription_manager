@@ -100,6 +100,22 @@ describe('Form Validation Edge Cases and Malicious Inputs', () => {
       }
       expect(res.status).toBe(201);
     });
+
+    it('should accept valid Algerian phone formats', async () => {
+      const algerianNumbers = ['0661123456', '0550123456', '0770123456', '021123456', '+213550123456', '00213550123456'];
+      for (const phone of algerianNumbers) {
+        resetRateLimit(); // Reset for each attempt in the loop
+        const res = await app.request('/api/public/submit-license-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...validBasePayload, phone, machineId: `PHONEDZ${RUN_ID}${phone.replace(/[^0-9]/g, '')}`.replace(/[^a-zA-Z0-9]/g, '') })
+        });
+        if (res.status !== 201) {
+          console.log(`Algerian phone test failed for ${phone}:`, await res.json());
+        }
+        expect(res.status).toBe(201);
+      }
+    });
   });
 
 

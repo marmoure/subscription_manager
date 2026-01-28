@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const getLicenseRequestSchema = (t: (key: string) => string) => z.object({
+export const getLicenseRequestSchema = (t: (key: string) => string, lang?: string) => z.object({
   name: z.string()
     .min(2, t('validation.name_min'))
     .max(100, t('validation.name_max'))
@@ -12,7 +12,12 @@ export const getLicenseRequestSchema = (t: (key: string) => string) => z.object(
     .regex(/^[a-zA-Z0-9]+$/, t('validation.machine_id_alphanumeric')),
 
   phone: z.string()
-    .regex(/^\+?[1-9]\d{6,14}$/, t('validation.phone_invalid')),
+    .regex(
+      lang?.startsWith('ar') 
+        ? /^(0|\+213|00213)[2-7]\d{7,8}$/ 
+        : /^\+?[1-9]\d{6,14}$/, 
+      t('validation.phone_invalid')
+    ),
 
   shopName: z.string()
     .min(2, t('validation.shop_name_min'))

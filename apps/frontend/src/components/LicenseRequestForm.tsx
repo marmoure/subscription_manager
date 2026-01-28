@@ -41,7 +41,7 @@ export function LicenseRequestForm() {
   const [error, setError] = useState<string | null>(null)
   const [licenseData, setLicenseData] = useState<{ licenseKey: string; expiresAt: string } | null>(null)
 
-  const schema = useMemo(() => getLicenseRequestSchema(t), [t])
+  const schema = useMemo(() => getLicenseRequestSchema(t, i18n.language), [t, i18n.language])
 
   // 1. Define your form.
   const form = useForm<LicenseRequestFormValues>({

@@ -12,7 +12,7 @@ export const submitLicenseRequestSchema = z.object({
     .regex(/^[a-zA-Z0-9]+$/, 'Machine ID must be alphanumeric'),
 
   phone: z.string()
-    .regex(/^\+?[1-9]\d{6,14}$/, 'Invalid phone number format (must be 7-15 digits)'),
+    .regex(/^(\+?[1-9]\d{6,14}|(0|\+213|00213)[2-7]\d{7,8})$/, 'Invalid phone number format'),
 
   shopName: z.string()
     .min(2, 'Shop name must be at least 2 characters')
