@@ -5,10 +5,11 @@ interface CaptchaProps {
   onChange: (token: string | null) => void
   siteKey: string
   className?: string
+  hl?: string
 }
 
 export const Captcha = forwardRef<ReCAPTCHA, CaptchaProps>(
-  ({ onChange, siteKey, className }, ref) => {
+  ({ onChange, siteKey, className, hl }, ref) => {
     return (
       <div className={className}>
         <ReCAPTCHA
@@ -17,6 +18,7 @@ export const Captcha = forwardRef<ReCAPTCHA, CaptchaProps>(
           onChange={onChange}
           onExpired={() => onChange(null)}
           onErrored={() => onChange(null)}
+          hl={hl}
         />
       </div>
     )

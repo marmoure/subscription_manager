@@ -1,8 +1,9 @@
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import ReCAPTCHA from "react-google-recaptcha"
-import { Loader2, AlertCircle, CheckCircle2, Copy } from "lucide-react"
+import { Loader2, AlertCircle, CheckCircle2, Copy, Languages } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import {
   Form,
   FormControl,
@@ -23,19 +24,28 @@ import {
   CardFooter,
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { licenseRequestSchema, type LicenseRequestFormValues } from "@/schemas/licenseRequest.schema"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { getLicenseRequestSchema, type LicenseRequestFormValues } from "@/schemas/licenseRequest.schema"
 import { submitLicenseRequest, ApiError } from "@/services/api"
 import { Captcha } from "@/components/Captcha"
 
 export function LicenseRequestForm() {
+  const { t, i18n } = useTranslation()
   const recaptchaRef = React.useRef<ReCAPTCHA>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [licenseData, setLicenseData] = useState<{ licenseKey: string; expiresAt: string } | null>(null)
 
+  const schema = useMemo(() => getLicenseRequestSchema(t), [t])
+
   // 1. Define your form.
   const form = useForm<LicenseRequestFormValues>({
-    resolver: zodResolver(licenseRequestSchema) as any,
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       name: "",
       machineId: "",
@@ -61,7 +71,7 @@ export function LicenseRequestForm() {
         form.reset()
         recaptchaRef.current?.reset()
       } else {
-        setError(response.message || "An unknown error occurred.")
+        setError(response.message || t('unknown_error'))
         recaptchaRef.current?.reset()
         form.setValue("captchaToken", "")
       }
@@ -76,9 +86,9 @@ export function LicenseRequestForm() {
             form.setError(key as any, { message });
           }
         });
-        setError("Please check the form for errors.");
+        setError(t('check_form_errors'));
       } else {
-        setError(err.message || "Failed to submit request. Please try again.")
+        setError(err.message || t('failed_to_submit'))
       }
 
       recaptchaRef.current?.reset()
@@ -103,6 +113,10 @@ export function LicenseRequestForm() {
     }
   }
 
+  const toggleLanguage = (lng: string) => {
+    i18n.changeLanguage(lng)
+  }
+
   // Use a dummy site key for development/demo if one isn't provided in env
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 
@@ -110,12 +124,15 @@ export function LicenseRequestForm() {
     return (
       <Card className="w-full max-w-2xl mx-auto border-green-500">
         <CardHeader>
-          <div className="flex items-center gap-2 text-green-600 mb-2">
-            <CheckCircle2 className="h-6 w-6" />
-            <CardTitle>License Request Approved!</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-green-600 mb-2">
+              <CheckCircle2 className="h-6 w-6" />
+              <CardTitle>{t('approved')}</CardTitle>
+            </div>
+            <LanguageSwitcher currentLanguage={i18n.language} onLanguageChange={toggleLanguage} />
           </div>
           <CardDescription>
-            Your license has been successfully generated. Please save this key safely.
+            {t('approved_description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -123,12 +140,12 @@ export function LicenseRequestForm() {
             <code className="text-lg font-mono font-bold break-all">
               {licenseData.licenseKey}
             </code>
-            <Button variant="ghost" size="icon" onClick={copyToClipboard} title="Copy to clipboard">
+            <Button variant="ghost" size="icon" onClick={copyToClipboard} title={t('copy_to_clipboard')}>
               <Copy className="h-4 w-4" />
             </Button>
           </div>
           <div className="text-sm text-muted-foreground">
-            Expires on: {new Date(licenseData.expiresAt).toLocaleDateString()}
+            {t('expires_on')}: {new Date(licenseData.expiresAt).toLocaleDateString(i18n.language)}
           </div>
         </CardContent>
         <CardFooter>
@@ -136,7 +153,7 @@ export function LicenseRequestForm() {
             className="w-full"
             onClick={() => setLicenseData(null)}
           >
-            Request Another License
+            {t('request_another')}
           </Button>
         </CardFooter>
       </Card>
@@ -146,16 +163,19 @@ export function LicenseRequestForm() {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>License Request</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>{t('license_request')}</CardTitle>
+          <LanguageSwitcher currentLanguage={i18n.language} onLanguageChange={toggleLanguage} />
+        </div>
         <CardDescription>
-          Submit a request for a new machine license.
+          {t('submit_request')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>{t('error')}</AlertTitle>
             <AlertDescription>
               {error}
             </AlertDescription>
@@ -170,10 +190,10 @@ export function LicenseRequestForm() {
                 name="name"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t('name')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="John Doe"
+                        placeholder={t('name_placeholder')}
                         {...field}
                         className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}
@@ -189,10 +209,10 @@ export function LicenseRequestForm() {
                 name="shopName"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Shop Name</FormLabel>
+                    <FormLabel>{t('shop_name')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="My Awesome Shop"
+                        placeholder={t('shop_name_placeholder')}
                         {...field}
                         className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                         disabled={isLoading}
@@ -208,10 +228,10 @@ export function LicenseRequestForm() {
                 name="phone"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>{t('phone_number')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="0654392689"
+                        placeholder={t('phone_placeholder')}
                         type="tel"
                         {...field}
                         className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
@@ -228,7 +248,7 @@ export function LicenseRequestForm() {
                 name="numberOfCashiers"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Number of Cashiers</FormLabel>
+                    <FormLabel>{t('number_of_cashiers')}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -250,17 +270,17 @@ export function LicenseRequestForm() {
               name="machineId"
               render={({ field, fieldState }) => (
                 <FormItem>
-                  <FormLabel>Machine ID</FormLabel>
+                  <FormLabel>{t('machine_id')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="XXXX-XXXX-XXXX-XXXX"
+                      placeholder={t('machine_id_placeholder')}
                       {...field}
                       className={`h-12 ${fieldState.error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                       disabled={isLoading}
                     />
                   </FormControl>
                   <FormDescription>
-                    You can find the Machine ID in the system settings of your device.
+                    {t('machine_id_description')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -292,12 +312,13 @@ export function LicenseRequestForm() {
               name="captchaToken"
               render={() => (
                 <FormItem className="flex flex-col items-center justify-center pt-4">
-                  <FormLabel>Security Check</FormLabel>
+                  <FormLabel>{t('security_check')}</FormLabel>
                   <FormControl>
                     <Captcha
                       ref={recaptchaRef}
                       siteKey={siteKey}
                       onChange={onCaptchaChange}
+                      hl={i18n.language}
                       className="transform scale-90 sm:scale-100 origin-center"
                     />
                   </FormControl>
@@ -310,15 +331,36 @@ export function LicenseRequestForm() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Submitting...
+                  {t('submitting')}
                 </>
               ) : (
-                "Submit Request"
+                t('submit_button')
               )}
             </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
+  )
+}
+
+function LanguageSwitcher({ currentLanguage, onLanguageChange }: { currentLanguage: string, onLanguageChange: (lng: string) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
+          <Languages className="h-4 w-4" />
+          <span className="sr-only">Toggle language</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onLanguageChange('en')} className={currentLanguage.startsWith('en') ? "bg-accent" : ""}>
+          English
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onLanguageChange('fr')} className={currentLanguage.startsWith('fr') ? "bg-accent" : ""}>
+          Français
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
