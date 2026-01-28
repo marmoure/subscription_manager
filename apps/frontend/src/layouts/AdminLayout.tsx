@@ -45,7 +45,7 @@ const navigation = [
   { name: 'Licenses', href: '/admin/licenses', icon: CreditCard },
   { name: 'Submissions', href: '/admin/submissions', icon: FileText },
   { name: 'API Keys', href: '/admin/api-keys', icon: Key },
-  { name: 'Settings', href: '/admin/settings', icon: Settings, future: true },
+  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes

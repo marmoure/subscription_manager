@@ -1,6 +1,6 @@
 import { ApiError } from './api';
 import { client } from '../lib/rpc-client';
-import { LoginFormValues } from '../schemas/auth.schema';
+import { LoginFormValues, ChangePasswordFormValues } from '../schemas/auth.schema';
 
 export interface AuthResponse {
   success: boolean;
@@ -72,11 +72,139 @@ export const logout = async (refreshToken: string): Promise<{ success: boolean }
 
 
 
-  const result = await response.json();
+    const result = await response.json();
 
-  return result as unknown as { success: boolean };
 
-};
+
+  
+
+
+
+    return result as unknown as { success: boolean };
+
+
+
+  
+
+
+
+  };
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  export const changePassword = async (values: ChangePasswordFormValues): Promise<{ success: boolean; message: string }> => {
+
+
+
+  
+
+
+
+    const response = await client.api.admin['change-password'].$post({
+
+
+
+  
+
+
+
+      json: values
+
+
+
+  
+
+
+
+    });
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+    if (!response.ok) {
+
+
+
+  
+
+
+
+      const errorData = await response.json() as any;
+
+
+
+  
+
+
+
+      throw new ApiError(errorData.message || 'Password change failed', errorData);
+
+
+
+  
+
+
+
+    }
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+    const result = await response.json();
+
+
+
+  
+
+
+
+    return result as any;
+
+
+
+  
+
+
+
+  };
+
+
+
+  
 
 
 

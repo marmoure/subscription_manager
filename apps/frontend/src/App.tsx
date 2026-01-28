@@ -6,6 +6,7 @@ import Licenses from './pages/admin/Licenses';
 import LicenseDetail from './pages/admin/LicenseDetail';
 import Submissions from './pages/admin/Submissions';
 import ApiKeys from './pages/admin/ApiKeys';
+import Settings from './pages/admin/Settings';
 import Login from './pages/admin/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -60,6 +61,14 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <ApiKeys />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/settings" 
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           } 
         />

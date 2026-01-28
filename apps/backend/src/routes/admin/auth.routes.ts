@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { db } from '../../db/db';
 import { adminUsers, refreshTokens } from '../../db/schema';
-import { registerAdminSchema, loginAdminSchema, type RegisterAdminInput, type LoginAdminInput } from '../../schemas/admin.schema';
+import { registerAdminSchema, loginAdminSchema, changePasswordSchema, type RegisterAdminInput, type LoginAdminInput, type ChangePasswordInput } from '../../schemas/admin.schema';
 import { zValidator } from '../../middleware/validator';
 import { hashPassword, verifyPassword } from '../../utils/password';
 import { verifyToken, generateAccessToken, generateRefreshToken } from '../../utils/jwt';
@@ -280,6 +280,65 @@ const authRoutes = new Hono()
         return c.json({
           success: false,
           message: 'An error occurred during registration'
+        }, 500);
+      }
+    }
+  )
+  /**
+   * POST /api/admin/change-password
+   * Change password for the currently authenticated admin
+   */
+  .post(
+    '/change-password',
+    authenticateAdmin,
+    zValidator('json', changePasswordSchema),
+    async (c) => {
+      try {
+        const admin = (c as any).get('admin');
+        const { currentPassword, newPassword } = (c as any).get('validatedJson') as ChangePasswordInput;
+
+        // 1. Get current admin from DB
+        const [dbAdmin] = await db
+          .select()
+          .from(adminUsers)
+          .where(eq(adminUsers.id, admin.id))
+          .limit(1);
+
+        if (!dbAdmin) {
+          return c.json({
+            success: false,
+            message: 'Admin user not found'
+          }, 404);
+        }
+
+        // 2. Verify current password
+        const isPasswordValid = await verifyPassword(currentPassword, dbAdmin.hashedPassword);
+        if (!isPasswordValid) {
+          return c.json({
+            success: false,
+            message: 'Invalid current password'
+          }, 400);
+        }
+
+        // 3. Hash new password
+        const hashedNewPassword = await hashPassword(newPassword);
+
+        // 4. Update password in DB
+        await db
+          .update(adminUsers)
+          .set({ hashedPassword: hashedNewPassword })
+          .where(eq(adminUsers.id, admin.id));
+
+        return c.json({
+          success: true,
+          message: 'Password changed successfully'
+        });
+
+      } catch (error) {
+        console.error('Error in change password:', error);
+        return c.json({
+          success: false,
+          message: 'An error occurred during password change'
         }, 500);
       }
     }
